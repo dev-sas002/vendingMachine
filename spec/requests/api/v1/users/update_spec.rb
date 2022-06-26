@@ -29,6 +29,21 @@ describe 'PUT /api/v1/user', { type: :request } do
       end
     end
 
+    context 'when trying to change the role' do
+      let(:user) { create(:user, :buyer) }
+      let(:params) { { user: { role: 'seller', first_name: 'Darth' } } }
+
+      include_examples 'have http status', :ok
+
+      it 'keeps the role chosen at registration' do
+        expect(user.reload).to be_buyer
+      end
+
+      it 'still applies the other changes' do
+        expect(user.reload.first_name).to eq('Darth')
+      end
+    end
+
     context 'when changing the password' do
       let(:user) { create(:user, password: 'oldPassword') }
 

@@ -34,7 +34,9 @@ module Api
       end
 
       def user_params
-        params.require(:user).permit(:email, :password, :first_name, :last_name, :locale, :role)
+        # The role is fixed at registration: a buyer turning into a seller
+        # mid-session would keep a balance a seller has no way to spend.
+        params.require(:user).permit(:email, :password, :first_name, :last_name, :locale)
       end
     end
   end

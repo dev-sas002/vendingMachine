@@ -2,6 +2,7 @@ describe 'POST /api/v1/users', { type: :request } do
   let(:request!) { post api_v1_users_path, params: params, as: :json }
   let(:email) { 'obikenobi@rebel.com' }
   let(:password) { 'abcd1234' }
+  let(:role) { 'seller' }
   let(:params) do
     {
       user: {
@@ -9,7 +10,8 @@ describe 'POST /api/v1/users', { type: :request } do
         last_name: 'Kenobi',
         email: email,
         password: password,
-        locale: 'es'
+        locale: 'es',
+        role: role
       }
     }
   end
@@ -25,7 +27,8 @@ describe 'POST /api/v1/users', { type: :request } do
         first_name: created_user.first_name,
         last_name: created_user.last_name,
         email: created_user.email,
-        locale: created_user.locale
+        locale: created_user.locale,
+        role: 'seller'
       )
     end
 
@@ -52,6 +55,26 @@ describe 'POST /api/v1/users', { type: :request } do
 
     context 'when the password is missing' do
       include_examples 'missing parameter', :password
+    end
+
+    shared_examples 'rejected role' do
+      include_examples 'have http status', :unprocessable_entity
+
+      it { expect(json.dig(:attributes_errors, :role)).to eq(['must be one of: seller, buyer']) }
+
+      it { expect(User.count).to eq(0) }
+    end
+
+    context 'when the role is missing' do
+      let(:role) { nil }
+
+      include_examples 'rejected role'
+    end
+
+    context 'when the role is not one the machine knows' do
+      let(:role) { 'admin' }
+
+      include_examples 'rejected role'
     end
   end
 end
