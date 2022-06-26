@@ -48,61 +48,61 @@ paths:
           content:
             application/json:
               example:
-              - id: 7392
+              - id: 400
                 name: MyProduct
                 price: 100
                 available_count: 10
                 available_amount: 10
-                seller_id: 3742
+                seller_id: 74
                 seller:
-                  id: 3742
-                  email: frederick.runolfsson@zemlak.info
-                created_at: '2026-09-23T23:36:05.057-04:00'
-                updated_at: '2026-09-23T23:36:05.057-04:00'
-              - id: 7393
+                  id: 74
+                  email: giuseppe@corwin-boehm.test
+                created_at: '2026-11-08T13:00:33.451-05:00'
+                updated_at: '2026-11-08T13:00:33.451-05:00'
+              - id: 401
                 name: MyProduct
                 price: 100
                 available_count: 10
                 available_amount: 10
-                seller_id: 3742
+                seller_id: 74
                 seller:
-                  id: 3742
-                  email: frederick.runolfsson@zemlak.info
-                created_at: '2026-09-23T23:36:05.058-04:00'
-                updated_at: '2026-09-23T23:36:05.058-04:00'
-              - id: 7394
+                  id: 74
+                  email: giuseppe@corwin-boehm.test
+                created_at: '2026-11-08T13:00:33.452-05:00'
+                updated_at: '2026-11-08T13:00:33.452-05:00'
+              - id: 402
                 name: MyProduct
                 price: 100
                 available_count: 10
                 available_amount: 10
-                seller_id: 3742
+                seller_id: 74
                 seller:
-                  id: 3742
-                  email: frederick.runolfsson@zemlak.info
-                created_at: '2026-09-23T23:36:05.059-04:00'
-                updated_at: '2026-09-23T23:36:05.059-04:00'
-              - id: 7395
+                  id: 74
+                  email: giuseppe@corwin-boehm.test
+                created_at: '2026-11-08T13:00:33.453-05:00'
+                updated_at: '2026-11-08T13:00:33.453-05:00'
+              - id: 403
                 name: MyProduct
                 price: 100
                 available_count: 10
                 available_amount: 10
-                seller_id: 3742
+                seller_id: 74
                 seller:
-                  id: 3742
-                  email: frederick.runolfsson@zemlak.info
-                created_at: '2026-09-23T23:36:05.060-04:00'
-                updated_at: '2026-09-23T23:36:05.060-04:00'
-              - id: 7396
+                  id: 74
+                  email: giuseppe@corwin-boehm.test
+                created_at: '2026-11-08T13:00:33.453-05:00'
+                updated_at: '2026-11-08T13:00:33.453-05:00'
+              - id: 404
                 name: MyProduct
                 price: 100
                 available_count: 10
                 available_amount: 10
-                seller_id: 3742
+                seller_id: 74
                 seller:
-                  id: 3742
-                  email: frederick.runolfsson@zemlak.info
-                created_at: '2026-09-23T23:36:05.060-04:00'
-                updated_at: '2026-09-23T23:36:05.060-04:00'
+                  id: 74
+                  email: giuseppe@corwin-boehm.test
+                created_at: '2026-11-08T13:00:33.454-05:00'
+                updated_at: '2026-11-08T13:00:33.454-05:00'
     post:
       summary: create product
       parameters:
@@ -130,17 +130,17 @@ paths:
           content:
             application/json:
               example:
-                id: 7402
+                id: 410
                 name: CreatedProduct
                 price: 99
                 available_count: 10
                 available_amount: 10
-                seller_id: 3743
+                seller_id: 75
                 seller:
-                  id: 3743
-                  email: ettie_streich@pfannerstill-rice.io
-                created_at: '2026-09-23T23:36:05.106-04:00'
-                updated_at: '2026-09-23T23:36:05.106-04:00'
+                  id: 75
+                  email: harrison@pfeffer.test
+                created_at: '2026-11-08T13:00:33.490-05:00'
+                updated_at: '2026-11-08T13:00:33.490-05:00'
   "/api/v1/products/{id}":
     parameters:
     - name: id
@@ -172,17 +172,17 @@ paths:
           content:
             application/json:
               example:
-                id: 7403
+                id: 411
                 name: MyProduct
                 price: 100
                 available_count: 10
                 available_amount: 10
-                seller_id: 3744
+                seller_id: 76
                 seller:
-                  id: 3744
-                  email: trinity.oreilly@walsh-becker.com
-                created_at: '2026-09-23T23:36:05.114-04:00'
-                updated_at: '2026-09-23T23:36:05.114-04:00'
+                  id: 76
+                  email: elicia@stehr.test
+                created_at: '2026-11-08T13:00:33.499-05:00'
+                updated_at: '2026-11-08T13:00:33.499-05:00'
     patch:
       summary: update product
       parameters:
@@ -197,17 +197,17 @@ paths:
           content:
             application/json:
               example:
-                id: 7408
+                id: 416
                 name: MyProduct
                 price: 150
                 available_count: 10
                 available_amount: 10
-                seller_id: 3745
+                seller_id: 77
                 seller:
-                  id: 3745
-                  email: franklyn_kutch@upton.name
-                created_at: '2026-09-23T23:36:05.140-04:00'
-                updated_at: '2026-09-23T23:36:05.160-04:00'
+                  id: 77
+                  email: desmond@kilback-ziemann.test
+                created_at: '2026-11-08T13:00:33.518-05:00'
+                updated_at: '2026-11-08T13:00:33.532-05:00'
     delete:
       summary: delete product
       responses:
@@ -216,17 +216,17 @@ paths:
           content:
             application/json:
               example:
-                id: 7413
+                id: 421
                 name: MyProduct
                 price: 100
                 available_count: 10
                 available_amount: 10
-                seller_id: 3746
+                seller_id: 78
                 seller:
-                  id: 3746
-                  email: angele.lang@senger-adams.info
-                created_at: '2026-09-23T23:36:05.168-04:00'
-                updated_at: '2026-09-23T23:36:05.168-04:00'
+                  id: 78
+                  email: mitchell.schimmel@west.example
+                created_at: '2026-11-08T13:00:33.541-05:00'
+                updated_at: '2026-11-08T13:00:33.541-05:00'
   "/api/v1/buy":
     parameters:
     - name: product_id
@@ -264,13 +264,17 @@ paths:
               example:
                 total_bill: 100
                 product:
-                  id: 7448
+                  id: 458
                   name: MyProduct
-                  available_count: 9
                   price: 100
-                  seller_id: 3858
-                  created_at: '2026-09-23T23:36:07.385-04:00'
-                  updated_at: '2026-09-23T23:36:07.406-04:00'
+                  available_count: 9
+                  available_amount: 9
+                  seller_id: 221
+                  seller:
+                    id: 221
+                    email: brandi@gutmann.example
+                  created_at: '2026-11-08T13:00:35.401-05:00'
+                  updated_at: '2026-11-08T13:00:35.415-05:00'
                 remaining_amount: 400
                 change:
                   coins:
