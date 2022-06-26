@@ -47,7 +47,7 @@ module Api
         error = result.error
         key = error.is_a?(Array) ? :errors : :error
 
-        render json: { key => error }, status: :unprocessable_entity
+        render json: { key => error }, status: :unprocessable_content
       end
 
       def deposit_params

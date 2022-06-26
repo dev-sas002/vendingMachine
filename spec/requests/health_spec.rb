@@ -1,4 +1,4 @@
-describe 'GET /health', { type: :request } do
+describe 'GET /health' do
   let(:request!) { get '/health' }
 
   context 'when the database is reachable' do

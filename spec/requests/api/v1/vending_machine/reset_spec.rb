@@ -1,4 +1,4 @@
-describe 'POST /api/v1/reset', { type: :request } do
+describe 'POST /api/v1/reset' do
   let(:request!) { post api_v1_reset_path, headers: headers, as: :json }
 
   let(:user) { create(:user, :buyer, deposit_amount: 175) }

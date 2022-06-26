@@ -17,7 +17,7 @@ Bundler.require(*Rails.groups)
 
 module VendingMachine
   class Application < Rails::Application
-    config.load_defaults 6.0
+    config.load_defaults 7.2
 
     config.active_job.queue_adapter = :sidekiq
     config.time_zone = ENV.fetch('TZ', 'Eastern Time (US & Canada)')

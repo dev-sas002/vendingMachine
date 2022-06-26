@@ -66,7 +66,5 @@ class CoinSet
   end
   alias eql? ==
 
-  def hash
-    denominations.hash
-  end
+  delegate :hash, to: :denominations
 end

@@ -43,7 +43,7 @@ class Product < ApplicationRecord
 
     updated_rows = self.class
                        .where(id: id)
-                       .where('available_count >= ?', quantity)
+                       .where(available_count: quantity..)
                        # Deliberately `update_all`: the point is a single
                        # conditional UPDATE that the database evaluates, not a
                        # read-modify-write through the model layer.

@@ -1,4 +1,4 @@
-describe 'POST /api/v1/deposit', { type: :request } do
+describe 'POST /api/v1/deposit' do
   let(:request!) do
     post api_v1_deposit_path,
          params: { deposit_amount: deposit_amount },
@@ -34,7 +34,7 @@ describe 'POST /api/v1/deposit', { type: :request } do
   context 'when the coin is not accepted' do
     let(:deposit_amount) { 7 }
 
-    include_examples 'have http status', :unprocessable_entity
+    include_examples 'have http status', :unprocessable_content
 
     it 'reports the invalid amount' do
       expect(json[:error]).to eq('Invalid Amount')
@@ -48,13 +48,13 @@ describe 'POST /api/v1/deposit', { type: :request } do
   context 'when the amount is missing' do
     let(:deposit_amount) { nil }
 
-    include_examples 'have http status', :unprocessable_entity
+    include_examples 'have http status', :unprocessable_content
   end
 
   context 'when the amount is negative' do
     let(:deposit_amount) { -50 }
 
-    include_examples 'have http status', :unprocessable_entity
+    include_examples 'have http status', :unprocessable_content
 
     it 'does not credit the deposit' do
       expect(user.reload.deposit_amount).to eq(0)

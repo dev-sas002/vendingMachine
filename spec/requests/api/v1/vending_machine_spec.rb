@@ -1,6 +1,6 @@
 require 'swagger_helper'
 
-RSpec.describe 'api/v1/vending_machine', type: :request do
+RSpec.describe 'api/v1/vending_machine' do
   let(:buyer) { create(:user, :buyer, deposit_amount: 500) }
   let!(:product) { create(:product, price: 100, available_count: 10) }
   let(:token) { buyer.create_new_auth_token }

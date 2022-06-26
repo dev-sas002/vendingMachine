@@ -23,7 +23,7 @@
 #  reset_password_token   :string           indexed
 #  role                   :integer
 #  sign_in_count          :integer          default(0)
-#  tokens                 :json             not null
+#  tokens                 :json
 #  uid                    :string           not null, indexed => [provider]
 #  unconfirmed_email      :string
 #  created_at             :datetime         not null
@@ -37,7 +37,7 @@
 #  index_users_on_uid_and_provider      (uid,provider) UNIQUE
 #
 
-describe User, type: :model do
+describe User do
   subject(:user) { create(:user) }
 
   describe 'validations' do

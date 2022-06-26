@@ -3,11 +3,11 @@ require 'sidekiq/web'
 if Rails.env.production?
   Sidekiq::Web.use Rack::Auth::Basic do |username, password|
     ActiveSupport::SecurityUtils.secure_compare(
-      ::Digest::SHA256.hexdigest(username),
-      ::Digest::SHA256.hexdigest(ENV.fetch('JOB_MONITOR_USERNAME'))
+      Digest::SHA256.hexdigest(username),
+      Digest::SHA256.hexdigest(ENV.fetch('JOB_MONITOR_USERNAME'))
     ) & ActiveSupport::SecurityUtils.secure_compare(
-      ::Digest::SHA256.hexdigest(password),
-      ::Digest::SHA256.hexdigest(ENV.fetch('JOB_MONITOR_PASSWORD'))
+      Digest::SHA256.hexdigest(password),
+      Digest::SHA256.hexdigest(ENV.fetch('JOB_MONITOR_PASSWORD'))
     )
   end
 end

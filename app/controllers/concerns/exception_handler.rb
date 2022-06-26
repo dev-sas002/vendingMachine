@@ -19,7 +19,7 @@ module ExceptionHandler
   end
 
   def render_attributes_errors(error_messages)
-    render json: { attributes_errors: error_messages }, status: :unprocessable_entity
+    render json: { attributes_errors: error_messages }, status: :unprocessable_content
   end
 
   def render_parameter_missing(exception)
@@ -37,7 +37,7 @@ module ExceptionHandler
   end
 
   def render_page_overflow
-    render_errors(I18n.t('errors.page_overflow'), :unprocessable_entity)
+    render_errors(I18n.t('errors.page_overflow'), :unprocessable_content)
   end
 
   def handle_standard_error(exception)

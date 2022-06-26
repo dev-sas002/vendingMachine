@@ -4,7 +4,7 @@ module RuboCop
   module Cop
     module Migration
       # Cop that checks if indexes are added in a concurrent manner.
-      class AddIndex < RuboCop::Cop::Cop
+      class AddIndex < RuboCop::Cop::Base
         include MigrationHelpers
 
         MSG_DDT = 'Prefer using disable_ddl_transaction! and { algorithm: :concurrently }'\

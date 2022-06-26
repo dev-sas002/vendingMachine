@@ -41,7 +41,7 @@ x-app: &app
 
 services:
   db:
-    image: postgres:13-alpine
+    image: postgres:16-alpine
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
@@ -59,7 +59,7 @@ services:
     restart: unless-stopped
 
   redis:
-    image: redis:6-alpine
+    image: redis:7-alpine
     command: ["redis-server", "--save", "", "--appendonly", "no"]
     ports:
       - "8402:6379"

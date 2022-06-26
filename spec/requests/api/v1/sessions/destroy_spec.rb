@@ -1,4 +1,4 @@
-describe 'DELETE /api/v1/users/sign_out', { type: :request } do
+describe 'DELETE /api/v1/users/sign_out' do
   let(:request!) { delete destroy_user_session_path, headers: headers, as: :json }
   let(:user) { create(:user) }
 
@@ -7,7 +7,7 @@ describe 'DELETE /api/v1/users/sign_out', { type: :request } do
 
     include_examples 'have http status', :no_content
 
-    it 'destroys the user token', skip_request: true do
+    it 'destroys the user token', :skip_request do
       access_token = auth_headers['access-token']
       client = auth_headers['client']
 

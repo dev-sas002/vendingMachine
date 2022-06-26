@@ -6,9 +6,13 @@ inherit_mode:
   merge:
     - Exclude
 
-require:
+plugins:
   - rubocop-rails
   - rubocop-rspec
+  - rubocop-rspec_rails
+  - rubocop-factory_bot
+
+require:
   - ./rubocop/rubocop
 
 AllCops:
@@ -66,6 +70,19 @@ RSpec/MultipleMemoizedHelpers:
   # An endpoint example group names a buyer, a seller, a product, the headers,
   # the params and the request itself. Five is not a realistic ceiling here.
   Max: 12
+
+Naming/PredicateMethod:
+  # `decrement_stock!` answers "did it happen" the way `save` does.
+  AllowBangMethods: true
+
+FactoryBot/ExcessiveCreateList:
+  # Pagination specs need more than a page of rows (25, capped at 100).
+  MaxAmount: 30
+
+RSpec/IncludeExamples:
+  # `include_examples 'have http status'` is meant to run in the caller's
+  # group, against the caller's `let`s and the request it already made.
+  Enabled: false
 
 RSpec/MultipleExpectations:
   # The house style is one expectation per example. The exceptions are hash

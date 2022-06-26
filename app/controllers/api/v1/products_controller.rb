@@ -26,7 +26,7 @@ module Api
         if @product.save
           render :show, status: :created
         else
-          render json: { errors: @product.errors.full_messages }, status: :unprocessable_entity
+          render json: { errors: @product.errors.full_messages }, status: :unprocessable_content
         end
       end
 
@@ -34,7 +34,7 @@ module Api
         if @product.update(product_params)
           render :show
         else
-          render json: { errors: @product.errors.full_messages }, status: :unprocessable_entity
+          render json: { errors: @product.errors.full_messages }, status: :unprocessable_content
         end
       end
 
@@ -42,7 +42,7 @@ module Api
         if @product.destroy
           render :show, status: :ok
         else
-          render json: { errors: @product.errors.full_messages }, status: :unprocessable_entity
+          render json: { errors: @product.errors.full_messages }, status: :unprocessable_content
         end
       end
 

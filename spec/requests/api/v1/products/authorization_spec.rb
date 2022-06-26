@@ -1,4 +1,4 @@
-describe 'api/v1/products authorization', { type: :request } do
+describe 'api/v1/products authorization' do
   let(:owner) { create(:user, :seller) }
   let(:product) { create(:product, seller: owner, price: 100, available_count: 3) }
 
@@ -39,7 +39,7 @@ describe 'api/v1/products authorization', { type: :request } do
         post api_v1_products_path, params: { name: '', price: -1 }, headers: headers, as: :json
       end
 
-      include_examples 'have http status', :unprocessable_entity
+      include_examples 'have http status', :unprocessable_content
 
       it 'reports the validation failures' do
         expect(json[:errors]).to include("Name can't be blank")

@@ -1,6 +1,6 @@
 require 'swagger_helper'
 
-RSpec.describe 'api/v1/products', type: :request do
+RSpec.describe 'api/v1/products' do
   let(:seller) { create(:user, :seller) }
   let!(:products) { create_list(:product, 5, seller: seller) }
   let(:token) { seller.create_new_auth_token }
@@ -30,7 +30,7 @@ RSpec.describe 'api/v1/products', type: :request do
         end
 
         run_test! do
-          expect(JSON.parse(response.body).size).to eq(5)
+          expect(response.parsed_body.size).to eq(5)
         end
       end
     end

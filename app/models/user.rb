@@ -23,7 +23,7 @@
 #  reset_password_token   :string           indexed
 #  role                   :integer
 #  sign_in_count          :integer          default(0)
-#  tokens                 :json             not null
+#  tokens                 :json
 #  uid                    :string           not null, indexed => [provider]
 #  unconfirmed_email      :string
 #  created_at             :datetime         not null
@@ -44,13 +44,12 @@ class User < ApplicationRecord
          :trackable, :validatable, :registerable
 
   include DeviseTokenAuth::Concerns::User
-  serialize :tokens
 
   validates :locale,
             inclusion: { in: I18n.available_locales.map(&:to_s), allow_blank: true },
             if: :locale_changed?
 
-  enum role: { seller: 0, buyer: 1 }
+  enum :role, { seller: 0, buyer: 1 }
 
   # A seller who closes their account takes their stock out of the machine.
   has_many :products, foreign_key: :seller_id, inverse_of: :seller, dependent: :destroy
@@ -58,8 +57,8 @@ class User < ApplicationRecord
   validates :deposit_amount,
             numericality: { only_integer: true, greater_than_or_equal_to: 0, allow_nil: true }
 
-  def send_devise_notification(notification, *args)
-    devise_mailer.send(notification, self, *args).deliver_later
+  def send_devise_notification(notification, *)
+    devise_mailer.send(notification, self, *).deliver_later
   end
 
   # Applies `amount` to the deposit balance. `operation` is either 'deposit'

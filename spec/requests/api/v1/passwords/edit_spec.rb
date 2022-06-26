@@ -1,6 +1,6 @@
 require 'addressable/uri'
 
-describe 'GET api/v1/users/password/edit', { type: :request } do
+describe 'GET api/v1/users/password/edit' do
   let(:request!) { get edit_user_password_path, params: params, headers: headers, as: :json }
   let(:params) { { reset_password_token: password_token } }
   let!(:password_token) { user.send(:set_reset_password_token) }

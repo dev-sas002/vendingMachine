@@ -17,7 +17,7 @@ module ActAsApiRequest
   end
 
   def check_request_type
-    return if request_body.empty?
+    return if request.raw_post.to_s.empty?
 
     allowed_types = %w[json form-data]
     content_type = request.content_type
@@ -29,11 +29,5 @@ module ActAsApiRequest
 
   def skip_session_storage
     request.session_options[:skip] = true
-  end
-
-  private
-
-  def request_body
-    request.body.read
   end
 end

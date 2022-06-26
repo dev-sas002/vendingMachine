@@ -1,6 +1,6 @@
 require 'rails_helper'
 
-RSpec.describe 'products/index', type: :view do
+RSpec.describe 'products/index' do
   let(:seller) { create(:user, :seller) }
 
   before do

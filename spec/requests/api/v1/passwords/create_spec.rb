@@ -1,4 +1,4 @@
-describe 'POST /api/v1/users/password', { type: :request } do
+describe 'POST /api/v1/users/password' do
   let(:request!) { post user_password_path, params: params, as: :json }
   let(:user) { create(:user, password: 'old password') }
 
@@ -8,11 +8,11 @@ describe 'POST /api/v1/users/password', { type: :request } do
 
       include_examples 'have http status', :no_content
 
-      it 'sends an email with the reset password token', skip_request: true do
+      it 'sends an email with the reset password token', :skip_request do
         expect { request! }.to have_enqueued_email(Devise::Mailer, :reset_password_instructions)
       end
 
-      it 'changes the user reset password token', skip_request: true do
+      it 'changes the user reset password token', :skip_request do
         expect { request! }.to(change { user.reload.reset_password_token })
       end
     end
@@ -22,7 +22,7 @@ describe 'POST /api/v1/users/password', { type: :request } do
 
       include_examples 'have http status', :not_found
 
-      it 'does not send an email', skip_request: true do
+      it 'does not send an email', :skip_request do
         expect { request! }.not_to(change { ActionMailer::Base.deliveries.count })
       end
     end

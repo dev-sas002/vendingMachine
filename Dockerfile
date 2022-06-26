@@ -4,7 +4,7 @@
 # Stage 1 - build: compiles the native extensions (pg, bootsnap) and resolves
 # the bundle. Nothing from this stage ships except vendor/bundle.
 ################################################################################
-FROM ruby:2.7.2-slim-bullseye AS build
+FROM ruby:3.4.12-slim-bookworm AS build
 
 # Pass BUNDLE_WITHOUT="development:test" for a production image. The default
 # installs every group so the compose demo stack can boot in development mode
@@ -38,7 +38,7 @@ RUN bundle exec bootsnap precompile --gemfile app/ lib/ || true
 ################################################################################
 # Stage 2 - runtime: no compilers, no headers, no build cache.
 ################################################################################
-FROM ruby:2.7.2-slim-bullseye AS runtime
+FROM ruby:3.4.12-slim-bookworm AS runtime
 
 ENV BUNDLE_PATH=/usr/local/bundle \
     RAILS_LOG_TO_STDOUT=true \

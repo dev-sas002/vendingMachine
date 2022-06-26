@@ -19,7 +19,7 @@ RSpec.describe RuboCop::Cop::Migration::AddIndex do
     it 'reports an offense' do
       expect_offense(<<~RUBY)
         class Migration
-        ^^^^^^^^^^^^^^^ Prefer using disable_ddl_transaction! and { algorithm: :concurrently } when creating an index
+        ^^^^^^^^^^^^^^^ Migration/AddIndex: Prefer using disable_ddl_transaction! and { algorithm: :concurrently } when creating an index
           def change
             add_index :table, :column, algorithm: :concurrently
           end
@@ -32,10 +32,10 @@ RSpec.describe RuboCop::Cop::Migration::AddIndex do
     it 'reports an offense' do
       expect_offense(<<~RUBY)
         class Migration
-        ^^^^^^^^^^^^^^^ Prefer using disable_ddl_transaction! and { algorithm: :concurrently } when creating an index
+        ^^^^^^^^^^^^^^^ Migration/AddIndex: Prefer using disable_ddl_transaction! and { algorithm: :concurrently } when creating an index
           def change
             add_index :table, :column
-            ^^^^^^^^^^^^^^^^^^^^^^^^^ Prefer using { algorithm: :concurrently } when creating an index
+            ^^^^^^^^^^^^^^^^^^^^^^^^^ Migration/AddIndex: Prefer using { algorithm: :concurrently } when creating an index
           end
         end
       RUBY
@@ -62,7 +62,7 @@ RSpec.describe RuboCop::Cop::Migration::AddIndex do
           disable_ddl_transaction!
           def change
             add_index :table, :column
-            ^^^^^^^^^^^^^^^^^^^^^^^^^ Prefer using { algorithm: :concurrently } when creating an index
+            ^^^^^^^^^^^^^^^^^^^^^^^^^ Migration/AddIndex: Prefer using { algorithm: :concurrently } when creating an index
           end
         end
       RUBY

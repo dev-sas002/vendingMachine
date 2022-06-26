@@ -1,4 +1,4 @@
-describe 'GET /api/v1/user/all', { type: :request } do
+describe 'GET /api/v1/user/all' do
   let(:request!) do
     sellers
     get all_api_v1_user_path, params: params, headers: headers

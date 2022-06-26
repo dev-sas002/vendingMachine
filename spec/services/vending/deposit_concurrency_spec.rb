@@ -10,12 +10,12 @@ describe Vending::Deposit, :concurrency do
   end
 
   # Releases every thread at once so they genuinely race for the buyer row.
-  def race(count, &operation)
+  def race(count, &)
     gate = Queue.new
     threads = Array.new(count) do
       Thread.new do
         gate.pop
-        ActiveRecord::Base.connection_pool.with_connection(&operation)
+        ActiveRecord::Base.connection_pool.with_connection(&)
       end
     end
     count.times { gate << :go }

@@ -47,10 +47,6 @@ Rails.application.configure do
   # Raises error for missing translations.
   # config.action_view.raise_on_missing_translations = true
 
-  # Use an evented file watcher to asynchronously detect changes in source code,
-  # routes, locales, etc. This feature depends on the listen gem.
-  config.file_watcher = ActiveSupport::EventedFileUpdateChecker
-
   config.after_initialize do
     Bullet.enable = true
     Bullet.alert = false
@@ -60,6 +56,6 @@ Rails.application.configure do
     Bullet.add_footer = true
   end
 
-  config.action_mailer.preview_path = Rails.root.join('spec/mailers/previews')
+  config.action_mailer.preview_paths << Rails.root.join('spec/mailers/previews').to_s
   config.cache_store = :memory_store
 end

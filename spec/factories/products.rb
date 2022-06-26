@@ -19,7 +19,7 @@ FactoryBot.define do
     name { 'MyProduct' }
     available_count { 10 }
     price { 100 }
-    association :seller, factory: %i[user seller]
+    seller factory: %i[user seller]
 
     trait :sold_out do
       available_count { 0 }

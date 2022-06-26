@@ -6,7 +6,7 @@ abort('The Rails environment is running in production mode!') if Rails.env.produ
 require 'rspec/rails'
 require 'spec_helper'
 
-Dir[Rails.root.join('spec/support/**/*.rb')].sort.each { |file| require file }
+Rails.root.glob('spec/support/**/*.rb').each { |file| require file }
 
 require 'active_record/tasks/database_tasks'
 
@@ -14,7 +14,7 @@ begin
   ActiveRecord::Tasks::DatabaseTasks.create_current('test')
   ActiveRecord::Migration.maintain_test_schema!
 rescue ActiveRecord::PendingMigrationError => e
-  puts e.to_s.strip
+  warn e.to_s.strip
   ActiveRecord::Tasks::DatabaseTasks.migrate
   ActiveRecord::Migration.maintain_test_schema!
 rescue ActiveRecord::NoDatabaseError

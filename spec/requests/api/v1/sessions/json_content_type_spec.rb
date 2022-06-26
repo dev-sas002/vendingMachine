@@ -1,4 +1,4 @@
-describe 'POST /api/v1/users/sign_in content negotiation', { type: :request } do
+describe 'POST /api/v1/users/sign_in content negotiation' do
   # `user` is referenced inside `request!` so the record exists before the
   # shared request initializer fires the call.
   let(:user) { create(:user, :buyer, email: 'buyer@example.com', password: 'abcd1234') }

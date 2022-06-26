@@ -1,4 +1,4 @@
-describe 'POST /api/v1/users', { type: :request } do
+describe 'POST /api/v1/users' do
   let(:request!) { post api_v1_users_path, params: params, as: :json }
   let(:email) { 'obikenobi@rebel.com' }
   let(:password) { 'abcd1234' }
@@ -44,7 +44,7 @@ describe 'POST /api/v1/users', { type: :request } do
     shared_examples 'missing parameter' do |field|
       let(field) { nil }
 
-      include_examples 'have http status', :unprocessable_entity
+      include_examples 'have http status', :unprocessable_content
 
       it { expect(json.dig(:attributes_errors, field)).to include("can't be blank") }
     end
@@ -58,7 +58,7 @@ describe 'POST /api/v1/users', { type: :request } do
     end
 
     shared_examples 'rejected role' do
-      include_examples 'have http status', :unprocessable_entity
+      include_examples 'have http status', :unprocessable_content
 
       it { expect(json.dig(:attributes_errors, :role)).to eq(['must be one of: seller, buyer']) }
 

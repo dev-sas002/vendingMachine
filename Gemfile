@@ -1,57 +1,58 @@
 source 'https://rubygems.org'
-ruby '2.7.2'
+ruby file: '.ruby-version'
 
-gem 'bootsnap', '>= 1.4.2', require: false
-gem 'rails', '~> 6.1.6'
+gem 'bootsnap', '~> 1.18', require: false
+gem 'rails', '~> 7.2.2'
 
-gem 'dotenv-rails', '~> 2.7.6'
-gem 'pg', '~> 1.3.5'
-gem 'puma', '~> 5.6'
-gem 'rack', '~> 2.2.3'
-gem 'rack-attack', '~> 6.6.1'
-gem 'rack-cors', '~> 1.1.1'
-gem 'sidekiq', '~> 6.4.2'
-gem 'strong_migrations', '~> 1.0.0'
+gem 'dotenv-rails', '~> 3.1'
+gem 'pg', '~> 1.5'
+gem 'puma', '~> 6.5'
+gem 'rack-attack', '~> 6.7'
+gem 'rack-cors', '~> 2.0'
+gem 'sidekiq', '~> 7.3'
+gem 'strong_migrations', '~> 2.1'
 
 gem 'nilify_blanks', '~> 1.4'
-gem 'ransack', '~> 3.2.1'
 
 # Authentication
-gem 'devise', '~> 4.8.1'
-gem 'devise_token_auth', '~> 1.2.0'
+gem 'devise', '~> 4.9'
+gem 'devise_token_auth', '~> 1.2.5'
 
 # Serializing json views
-gem 'jb', '~> 0.8.0'
+gem 'jb', '~> 0.8.2'
 
 # Pagination
 gem 'pagy', '~> 5.10'
-gem 'rswag'
+gem 'rswag-api', '~> 2.16'
+gem 'rswag-ui', '~> 2.16'
+# rswag-ui requires ostruct, which leaves Ruby's default gems in 4.0.
+gem 'ostruct', '~> 0.6'
 
 group :development, :test do
-  gem 'bullet', '~> 7.0.2'
-  gem 'byebug', '>= 11.0.1', platforms: %i[mri mingw x64_mingw]
-  gem 'factory_bot_rails', '~> 6.2.0'
-  gem 'faker', '~> 2.21.0'
-  gem 'rspec-rails', '~> 5.1.2'
-  gem 'rswag-specs'
+  gem 'bullet', '~> 8.0'
+  gem 'debug', '~> 1.10', platforms: %i[mri windows], require: 'debug/prelude'
+  gem 'factory_bot_rails', '~> 6.4'
+  gem 'faker', '~> 3.5'
+  gem 'rspec-rails', '~> 7.1'
+  gem 'rswag-specs', '~> 2.16'
 end
 
 group :development do
-  gem 'annotate', '~> 3.2.0'
-  gem 'letter_opener', '~> 1.8.1'
-  gem 'reek', '~> 6.1.1', require: false
-  gem 'rubocop', '~> 1.30.1', require: false
-  gem 'rubocop-rails', '~> 2.14.2', require: false
-  gem 'rubocop-rspec', '~> 2.11.1', require: false
-  gem 'spring', '~> 2.1.1'
-  gem 'spring-watcher-listen', '~> 2.0.0'
+  gem 'annotate', '~> 3.2'
+  gem 'letter_opener', '~> 1.10'
+  gem 'reek', '~> 6.3', require: false
+  gem 'rubocop', '~> 1.69', require: false
+  gem 'rubocop-factory_bot', '~> 2.26', require: false
+  gem 'rubocop-rails', '~> 2.27', require: false
+  gem 'rubocop-rspec', '~> 3.2', require: false
+  gem 'rubocop-rspec_rails', '~> 2.30', require: false
 end
 
 group :test do
-  gem 'rspec-json_expectations', '~> 2.2.0'
-  gem 'shoulda-matchers', '~> 5.1.0'
-  gem 'simplecov', '~> 0.21.2'
-  gem 'webmock', '~> 3.14.0'
+  gem 'rspec-json_expectations', '~> 2.2'
+  gem 'shoulda-matchers', '~> 6.4'
+  gem 'simplecov', '~> 0.22'
+  gem 'webmock', '~> 3.24'
 end
 
-gem 'tzinfo-data', platforms: %i[mingw mswin x64_mingw jruby]
+gem 'tzinfo-data', platforms: %i[windows jruby]

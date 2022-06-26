@@ -1,4 +1,4 @@
-describe 'GET /api/v1/products pagination', { type: :request } do
+describe 'GET /api/v1/products pagination' do
   let(:user) { create(:user, :buyer) }
   let(:headers) { auth_headers }
   let(:seller) { create(:user, :seller) }
@@ -85,7 +85,7 @@ describe 'GET /api/v1/products pagination', { type: :request } do
     context 'with a page past the end' do
       let(:query) { { page: 99 } }
 
-      include_examples 'have http status', :unprocessable_entity
+      include_examples 'have http status', :unprocessable_content
     end
   end
 

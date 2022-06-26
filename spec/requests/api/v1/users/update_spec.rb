@@ -1,4 +1,4 @@
-describe 'PUT /api/v1/user', { type: :request } do
+describe 'PUT /api/v1/user' do
   let(:request!) { put api_v1_user_path, params: params, headers: headers, as: :json }
 
   context 'when being signed in' do

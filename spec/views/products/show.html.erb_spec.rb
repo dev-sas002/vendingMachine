@@ -1,6 +1,6 @@
 require 'rails_helper'
 
-RSpec.describe 'products/show', type: :view do
+RSpec.describe 'products/show' do
   let(:seller) { create(:user, :seller) }
   let(:product) do
     create(:product, name: 'Coke', available_amount: 4, price: 120, seller: seller)

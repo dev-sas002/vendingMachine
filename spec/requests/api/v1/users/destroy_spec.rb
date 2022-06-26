@@ -1,4 +1,4 @@
-describe 'DELETE /api/v1/user', { type: :request } do
+describe 'DELETE /api/v1/user' do
   let(:request!) { delete api_v1_user_path, headers: headers, as: :json }
 
   context 'when being signed in' do

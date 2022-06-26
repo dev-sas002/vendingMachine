@@ -10,8 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_09_24_090000) do
-
+ActiveRecord::Schema[7.2].define(version: 2026_11_08_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -20,8 +19,8 @@ ActiveRecord::Schema.define(version: 2026_09_24_090000) do
     t.integer "available_count", default: 0
     t.integer "price"
     t.bigint "seller_id"
-    t.datetime "created_at", precision: 6, null: false
-    t.datetime "updated_at", precision: 6, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
     t.index ["seller_id"], name: "index_products_on_seller_id"
     t.check_constraint "available_count >= 0", name: "products_available_count_non_negative"
   end
@@ -31,25 +30,25 @@ ActiveRecord::Schema.define(version: 2026_09_24_090000) do
     t.string "last_name"
     t.bigint "deposit_amount", default: 0
     t.integer "role"
-    t.datetime "created_at", precision: 6, null: false
-    t.datetime "updated_at", precision: 6, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
     t.string "provider", default: "email", null: false
     t.string "email", null: false
     t.string "uid", null: false
     t.string "encrypted_password", null: false
     t.string "reset_password_token"
-    t.datetime "reset_password_sent_at"
-    t.datetime "remember_created_at"
+    t.datetime "reset_password_sent_at", precision: nil
+    t.datetime "remember_created_at", precision: nil
     t.string "confirmation_token"
-    t.datetime "confirmed_at"
-    t.datetime "confirmation_sent_at"
-    t.datetime "current_sign_in_at"
-    t.datetime "last_sign_in_at"
+    t.datetime "confirmed_at", precision: nil
+    t.datetime "confirmation_sent_at", precision: nil
+    t.datetime "current_sign_in_at", precision: nil
+    t.datetime "last_sign_in_at", precision: nil
     t.string "current_sign_in_ip"
     t.string "last_sign_in_ip"
     t.string "unconfirmed_email"
     t.integer "sign_in_count", default: 0
-    t.json "tokens", default: {}, null: false
+    t.json "tokens", default: {}
     t.boolean "must_change_password", default: false
     t.string "locale"
     t.index ["confirmation_token"], name: "index_users_on_confirmation_token", unique: true
@@ -58,5 +57,4 @@ ActiveRecord::Schema.define(version: 2026_09_24_090000) do
     t.index ["uid", "provider"], name: "index_users_on_uid_and_provider", unique: true
     t.check_constraint "deposit_amount >= 0", name: "users_deposit_amount_non_negative"
   end
-
 end

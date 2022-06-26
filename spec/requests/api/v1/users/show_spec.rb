@@ -1,4 +1,4 @@
-describe 'GET /api/v1/user', { type: :request } do
+describe 'GET /api/v1/user' do
   let(:request!) { get api_v1_user_path, headers: headers, as: :json }
   let(:user) { create(:user) }
 

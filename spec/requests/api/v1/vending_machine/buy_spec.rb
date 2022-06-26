@@ -1,4 +1,4 @@
-describe 'POST /api/v1/buy', { type: :request } do
+describe 'POST /api/v1/buy' do
   let(:request!) do
     post api_v1_buy_path,
          params: { product_id: product_id, quantity: quantity },
@@ -49,7 +49,7 @@ describe 'POST /api/v1/buy', { type: :request } do
   context 'when the deposit is insufficient' do
     let(:quantity) { 6 }
 
-    include_examples 'have http status', :unprocessable_entity
+    include_examples 'have http status', :unprocessable_content
 
     it 'explains why the order was refused' do
       expect(json[:error]).to eq('Order Amount exceeded your current Amount')
@@ -68,7 +68,7 @@ describe 'POST /api/v1/buy', { type: :request } do
     let(:product) { create(:product, price: 10, available_count: 2) }
     let(:quantity) { 3 }
 
-    include_examples 'have http status', :unprocessable_entity
+    include_examples 'have http status', :unprocessable_content
 
     it 'reports the stock shortfall' do
       expect(json[:error]).to eq('Not enough stock available')
@@ -87,7 +87,7 @@ describe 'POST /api/v1/buy', { type: :request } do
     let(:product) { create(:product, :sold_out, price: 10) }
     let(:quantity) { 1 }
 
-    include_examples 'have http status', :unprocessable_entity
+    include_examples 'have http status', :unprocessable_content
 
     it 'reports the product as sold out' do
       expect(json[:error]).to eq('Product is sold out')
@@ -101,7 +101,7 @@ describe 'POST /api/v1/buy', { type: :request } do
   context 'when the quantity is zero' do
     let(:quantity) { 0 }
 
-    include_examples 'have http status', :unprocessable_entity
+    include_examples 'have http status', :unprocessable_content
 
     it 'rejects the quantity' do
       expect(json[:error]).to eq('Quantity must be greater than zero')
@@ -115,7 +115,7 @@ describe 'POST /api/v1/buy', { type: :request } do
   context 'when the quantity is negative' do
     let(:quantity) { -3 }
 
-    include_examples 'have http status', :unprocessable_entity
+    include_examples 'have http status', :unprocessable_content
 
     it 'rejects the quantity' do
       expect(json[:error]).to eq('Quantity must be greater than zero')
