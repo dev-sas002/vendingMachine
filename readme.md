@@ -1,6 +1,6 @@
 # vendingMachine
 
-A JSON API for a coin-operated vending machine, in Rails 6.1. Sellers stock the
+A JSON API for a coin-operated vending machine, in Rails 7.2 on Ruby 3.4. Sellers stock the
 machine; buyers deposit coins, buy products and get their change back. Every
 amount is a whole number of coin units, so there is no floating point anywhere
 near a balance.
@@ -8,14 +8,15 @@ near a balance.
 Built as a take-home assessment, so it stays a focused API: no admin UI, no
 dashboard, nothing bolted on for show. The part worth reading is not the CRUD; it
 is that a purchase mutates two rows two buyers can race for, and that the race is
-closed and [proved](#closing-the-oversell-race).
+closed and [proved](#closing-the-oversell-race) - along with the smaller races on
+a single wallet.
 
 ## A recorded session
 
-No screenshots: this is a JSON API, and Swagger UI would not render on the
-machine this was captured on, so the evidence is curl. The full unedited session
-- sign-in, deposit, buy, reset, health, the test run and the concurrency proof -
-is in [`docs/api-walkthrough.md`](docs/api-walkthrough.md). Excerpts:
+No screenshots: this is a JSON API, so the evidence is curl against the Compose
+stack. The full session - registration, sign-in, deposit, buy, reset, the user
+endpoints, the test run and the concurrency proofs - is in
+[`docs/api-walkthrough.md`](docs/api-walkthrough.md). Excerpts:
 
 Authentication is enforced everywhere but sign-in, registration and password reset.
 
@@ -23,9 +24,9 @@ Authentication is enforced everywhere but sign-in, registration and password res
 $ curl -i http://127.0.0.1:8400/api/v1/products
 HTTP/1.1 401 Unauthorized
 {
-    "errors": [
-        "Authentication is required to perform this action"
-    ]
+  "errors": [
+    "Authentication is required to perform this action"
+  ]
 }
 ```
 
@@ -37,10 +38,10 @@ whatever is left (the full product row is in the response too, elided here):
 ```console
 $ curl -X POST http://127.0.0.1:8400/api/v1/buy … -d '{"product_id": 2, "quantity": 2}'
 {
-    "total_bill": 140,
-    "product": { "id": 2, "name": "Cola", "price": 70, "available_count": 6, … },
-    "remaining_amount": 60,
-    "change": { "coins": { "50": 1, "10": 1 }, "remainder": 0 }
+  "total_bill": 140,
+  "product": { "id": 2, "name": "Cola", "price": 70, "available_count": 6, … },
+  "remaining_amount": 10,
+  "change": { "coins": { "10": 1 }, "remainder": 0 }
 }
 ```
 
@@ -55,10 +56,11 @@ header trio `access-token` / `client` / `uid`.
 
 | Method | Path | Who | What |
 | --- | --- | --- | --- |
-| `POST` | `/api/v1/users` | anyone | Register as `seller` or `buyer` |
+| `POST` | `/api/v1/users` | anyone | Register; `role` (`seller` or `buyer`) is required and fixed from then on |
 | `POST` `DELETE` | `/api/v1/users/sign_in`, `/sign_out` | anyone / signed in | Issue and revoke the token trio |
 | `POST` `PATCH` | `/api/v1/users/password` | anyone / token | Reset-password mail, then the reset |
-| `GET` `PATCH` `DELETE` | `/api/v1/user` | signed in | The current user; `/user/all` lists every user |
+| `GET` `PATCH` `DELETE` | `/api/v1/user` | signed in | The current user; `DELETE` closes the account, and a seller's products go with it |
+| `GET` | `/api/v1/user/all` | signed in | Every user's public profile, paginated like products |
 | `GET` | `/api/v1/products`, `/products/:id` | signed in | Paginated listing with the seller embedded; one product |
 | `POST` `PATCH` `DELETE` | `/api/v1/products` | seller | Stock the machine; changes and deletes only your own rows |
 | `POST` | `/api/v1/deposit` | buyer | One coin onto the balance |
@@ -66,32 +68,45 @@ header trio `access-token` / `client` / `uid`.
 | `POST` | `/api/v1/reset` | buyer | Empty the balance, get coins back |
 | `GET` | `/health`, `/products` | anyone | Liveness with a DB check; read-only HTML listing |
 
-`GET /api/v1/products` is bounded by the `Paginatable` concern - 25 rows per page,
+`GET /api/v1/products` and `/user/all` are bounded by the `Paginatable` concern - 25 rows per page,
 `?items=` clamped at 100, pagy's `Link`, `Total-Count`, `Total-Pages`,
-`Current-Page` and `Page-Items` headers - and eager-loads the seller, so a full
+`Current-Page` and `Page-Items` headers - and the product listing eager-loads the seller, so a full
 page of 25 costs five queries (two token lookups, a `COUNT`, the page, one
 preload), asserted by a spec that subscribes to `sql.active_record`. Bullet runs with
 `raise = true` in the test environment, so reintroducing the N+1 is a failure.
 
 ## Running it
 
-Ruby 2.7.2 (see `.ruby-version`), PostgreSQL, and Redis if you want Sidekiq.
+With Docker, one command builds the image, starts PostgreSQL 16, Redis 7, the
+API and a Sidekiq worker, migrates, seeds and serves on port 8400:
 
 ```bash
-cp .env.sample .env          # fill in values for your machine
-bundle install
-bundle exec rake db:create db:migrate db:seed
-bundle exec rails server -p 8400
+docker compose up --build
+curl http://localhost:8400/health          # {"status":"ok","database":"ok"}
+```
+
+Swagger UI is at <http://localhost:8400/api-docs>, the Sidekiq UI at
+`/jobmonitor`, the read-only product listing at `/products`. The suite runs in
+the same image against the stack's database:
+
+```bash
+docker compose run --rm -e RAILS_ENV=test web bundle exec rspec
+docker compose down -v                     # stop and drop the database volume
 ```
 
 `db/seeds.rb` is idempotent, refuses to run against production, and creates
 `seller@example.com` and `buyer@example.com` (password `password123`, or
 `SEED_PASSWORD`) plus six products, one deliberately sold out.
 
-A `Dockerfile` and a `docker-compose.yml` are here too - PostgreSQL, Redis, the
-API and a Sidekiq worker on port 8400 - but **they have never been run**: Docker
-was unavailable where this was developed, so treat them as unverified. The
-walkthrough and everything above were run natively.
+Without Docker you need Ruby 3.4.12 (`.ruby-version`), PostgreSQL, and Redis
+if you want Sidekiq:
+
+```bash
+cp .env.sample .env          # fill in values for your machine
+bundle install
+bin/rails db:prepare db:seed
+bin/rails server -p 8400
+```
 
 ## A purchase, state by state
 
@@ -126,8 +141,8 @@ distinguishable in the body: `Order Amount exceeded your current Amount` versus
 ## Closing the oversell race
 
 A purchase is a read-modify-write across two rows - a balance and a stock count -
-so it is the one place here where concurrency costs real money. Three independent
-guards, in the order they take effect:
+so it is where concurrency costs the most money. Three independent guards, in the
+order they take effect:
 
 1. **One transaction, one lock order.** `Vending::Purchase` wraps the work in
    `transaction(requires_new: true)` and takes `User.lock.find(buyer.id)`, a
@@ -167,7 +182,15 @@ quantity)` and **7 of those 10 examples fail** - all four buyers get served out
 of two units and `available_count` commits at 1. The proof takes about half a
 second, so it stays in the default suite.
 
-## Two bugs that were actually in here
+Deposits and resets touch only the wallet, but they read a balance and write it
+back too, so `Vending::Deposit` and `Vending::Refund` run under
+`buyer.with_lock` - the same `SELECT ... FOR UPDATE` the purchase takes. The
+matching specs race four connections on one wallet: four coins of 10 must
+credit 40, and four concurrent resets of a balance of 100 must hand it back
+exactly once. Without the lock the first credited 10 and the second paid out
+400.
+
+## Bugs that were actually in here
 
 - **The funds check was inverted.** The guard read the wrong way round, so a
   purchase was permitted exactly when the buyer could *not* afford it and
@@ -181,6 +204,18 @@ second, so it stays in the default suite.
   controllers inherit from, and the 401 (no token) and 403 (wrong role) cases are
   asserted by `spec/support/shared_examples/authentication.rb` and
   `spec/requests/api/v1/products/authorization_spec.rb`.
+- **Wallet races.** Deposits and resets were unlocked read-modify-writes, so
+  concurrent coins went missing and a balance could be refunded more than once.
+  See the end of the previous section.
+- **Registration ignored the role.** `POST /api/v1/users` dropped `role`, so every
+  new account was refused by both the seller and the buyer endpoints until it
+  patched a role onto itself - which `PATCH /user` also allowed at any time.
+  The role is now required at registration (422 otherwise) and cannot be changed.
+- **`DELETE /user` did not delete.** It ran `update!` with the request params.
+  It now destroys the account (and a seller's products) and answers 204.
+- **`/user/all` leaked whole rows.** Every signed-in user could read everyone's
+  balance and sign-in IPs. It now renders the same public fields as `/user` and
+  is paginated.
 
 ## Layers, and which way they point
 
@@ -292,8 +327,8 @@ bundle exec rake swagger:generate    # regenerate swagger/v1/swagger.yaml
 bundle exec rake db:seed             # reload the demo data
 ```
 
-The suite is **371 examples, 0 failures** in 5.63 s at **98.66%** line coverage
-(1693/1716), SimpleCov reporting into the gitignored `coverage/`. Both linters come
+The suite is **398 examples, 0 failures** in about 6 s at **98.91%** line coverage
+(1820/1840), SimpleCov reporting into the gitignored `coverage/`. Both linters come
 back clean - no `.rubocop_todo.yml`, no suppressed backlog - and rswag generates
 the OpenAPI document from the request specs, so the docs cannot drift from them.
 
@@ -305,8 +340,6 @@ the OpenAPI document from the request specs, so the docs cannot drift from them.
   table and a second concurrency story.
 - **No order history.** A purchase mutates a balance and a stock count and
   returns a body; nothing is written down, so there is no ledger to reconcile.
-- **`GET /api/v1/user/all` is unbounded.** Pagination was added where a caller
-  can grow the data - products. That endpoint still returns every user.
 - **Sidekiq is configured but nearly idle.** Its only job is delivering the
   Devise reset-password mail; the worker exists to prove the wiring.
 - **The HTML pages are a debugging convenience.** `/products` is
