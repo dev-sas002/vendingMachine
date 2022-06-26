@@ -1,0 +1,358 @@
+---
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+openapi: 3.0.1
+info:
+  title: API V1
+  version: v1
+paths:
+  "/api/v1/products":
+    parameters:
+    - name: access-token
+      in: header
+      required: true
+      schema:
+        type: string
+    - name: client
+      in: header
+      required: true
+      schema:
+        type: string
+    - name: uid
+      in: header
+      required: true
+      schema:
+        type: string
+    get:
+      summary: list products
+      parameters:
+      - name: page
+        in: query
+        required: false
+        description: Page number (default 1)
+        schema:
+          type: integer
+      - name: items
+        in: query
+        required: false
+        description: Page size (default 25, maximum 100)
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: successful
+          content:
+            application/json:
+              example:
+              - id: 7392
+                name: MyProduct
+                price: 100
+                available_count: 10
+                available_amount: 10
+                seller_id: 3742
+                seller:
+                  id: 3742
+                  email: frederick.runolfsson@zemlak.info
+                created_at: '2026-09-23T23:36:05.057-04:00'
+                updated_at: '2026-09-23T23:36:05.057-04:00'
+              - id: 7393
+                name: MyProduct
+                price: 100
+                available_count: 10
+                available_amount: 10
+                seller_id: 3742
+                seller:
+                  id: 3742
+                  email: frederick.runolfsson@zemlak.info
+                created_at: '2026-09-23T23:36:05.058-04:00'
+                updated_at: '2026-09-23T23:36:05.058-04:00'
+              - id: 7394
+                name: MyProduct
+                price: 100
+                available_count: 10
+                available_amount: 10
+                seller_id: 3742
+                seller:
+                  id: 3742
+                  email: frederick.runolfsson@zemlak.info
+                created_at: '2026-09-23T23:36:05.059-04:00'
+                updated_at: '2026-09-23T23:36:05.059-04:00'
+              - id: 7395
+                name: MyProduct
+                price: 100
+                available_count: 10
+                available_amount: 10
+                seller_id: 3742
+                seller:
+                  id: 3742
+                  email: frederick.runolfsson@zemlak.info
+                created_at: '2026-09-23T23:36:05.060-04:00'
+                updated_at: '2026-09-23T23:36:05.060-04:00'
+              - id: 7396
+                name: MyProduct
+                price: 100
+                available_count: 10
+                available_amount: 10
+                seller_id: 3742
+                seller:
+                  id: 3742
+                  email: frederick.runolfsson@zemlak.info
+                created_at: '2026-09-23T23:36:05.060-04:00'
+                updated_at: '2026-09-23T23:36:05.060-04:00'
+    post:
+      summary: create product
+      parameters:
+      - name: name
+        in: query
+        required: true
+        description: Name of the Product
+        schema:
+          type: string
+      - name: available_count
+        in: query
+        required: true
+        description: Number of quantities
+        schema:
+          type: integer
+      - name: price
+        in: query
+        required: true
+        description: Price of the product
+        schema:
+          type: integer
+      responses:
+        '201':
+          description: created
+          content:
+            application/json:
+              example:
+                id: 7402
+                name: CreatedProduct
+                price: 99
+                available_count: 10
+                available_amount: 10
+                seller_id: 3743
+                seller:
+                  id: 3743
+                  email: ettie_streich@pfannerstill-rice.io
+                created_at: '2026-09-23T23:36:05.106-04:00'
+                updated_at: '2026-09-23T23:36:05.106-04:00'
+  "/api/v1/products/{id}":
+    parameters:
+    - name: id
+      in: path
+      description: id
+      required: true
+      schema:
+        type: string
+    - name: access-token
+      in: header
+      required: true
+      schema:
+        type: string
+    - name: client
+      in: header
+      required: true
+      schema:
+        type: string
+    - name: uid
+      in: header
+      required: true
+      schema:
+        type: string
+    get:
+      summary: show product
+      responses:
+        '200':
+          description: successful
+          content:
+            application/json:
+              example:
+                id: 7403
+                name: MyProduct
+                price: 100
+                available_count: 10
+                available_amount: 10
+                seller_id: 3744
+                seller:
+                  id: 3744
+                  email: trinity.oreilly@walsh-becker.com
+                created_at: '2026-09-23T23:36:05.114-04:00'
+                updated_at: '2026-09-23T23:36:05.114-04:00'
+    patch:
+      summary: update product
+      parameters:
+      - name: amount
+        in: query
+        description: Product Price
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: successful
+          content:
+            application/json:
+              example:
+                id: 7408
+                name: MyProduct
+                price: 150
+                available_count: 10
+                available_amount: 10
+                seller_id: 3745
+                seller:
+                  id: 3745
+                  email: franklyn_kutch@upton.name
+                created_at: '2026-09-23T23:36:05.140-04:00'
+                updated_at: '2026-09-23T23:36:05.160-04:00'
+    delete:
+      summary: delete product
+      responses:
+        '200':
+          description: successful
+          content:
+            application/json:
+              example:
+                id: 7413
+                name: MyProduct
+                price: 100
+                available_count: 10
+                available_amount: 10
+                seller_id: 3746
+                seller:
+                  id: 3746
+                  email: angele.lang@senger-adams.info
+                created_at: '2026-09-23T23:36:05.168-04:00'
+                updated_at: '2026-09-23T23:36:05.168-04:00'
+  "/api/v1/buy":
+    parameters:
+    - name: product_id
+      in: query
+      description: Product Id
+      schema:
+        type: integer
+    - name: quantity
+      in: query
+      description: Quantity
+      schema:
+        type: integer
+    - name: access-token
+      in: header
+      required: true
+      schema:
+        type: string
+    - name: client
+      in: header
+      required: true
+      schema:
+        type: string
+    - name: uid
+      in: header
+      required: true
+      schema:
+        type: string
+    post:
+      summary: buy vending_machine
+      responses:
+        '200':
+          description: successful
+          content:
+            application/json:
+              example:
+                total_bill: 100
+                product:
+                  id: 7448
+                  name: MyProduct
+                  available_count: 9
+                  price: 100
+                  seller_id: 3858
+                  created_at: '2026-09-23T23:36:07.385-04:00'
+                  updated_at: '2026-09-23T23:36:07.406-04:00'
+                remaining_amount: 400
+                change:
+                  coins:
+                    '100': 4
+                  remainder: 0
+        '422':
+          description: the buyer cannot afford the order
+          content:
+            application/json:
+              example:
+                error: Order Amount exceeded your current Amount
+  "/api/v1/deposit":
+    parameters:
+    - name: deposit_amount
+      in: query
+      description: Deposit Amount
+      schema:
+        type: integer
+    - name: access-token
+      in: header
+      required: true
+      schema:
+        type: string
+    - name: client
+      in: header
+      required: true
+      schema:
+        type: string
+    - name: uid
+      in: header
+      required: true
+      schema:
+        type: string
+    post:
+      summary: deposit vending_machine
+      responses:
+        '200':
+          description: successful
+          content:
+            application/json:
+              example:
+                message: Amount Deposited Successfully
+                deposit_amount: 505
+        '422':
+          description: the machine does not take that coin
+          content:
+            application/json:
+              example:
+                error: Invalid Amount
+  "/api/v1/reset":
+    parameters:
+    - name: access-token
+      in: header
+      required: true
+      schema:
+        type: string
+    - name: client
+      in: header
+      required: true
+      schema:
+        type: string
+    - name: uid
+      in: header
+      required: true
+      schema:
+        type: string
+    post:
+      summary: reset vending_machine
+      responses:
+        '200':
+          description: successful
+          content:
+            application/json:
+              example:
+                message: Deposit Amount Reset Successfully
+                returned_amount: 500
+                change:
+                  coins:
+                    '100': 5
+                  remainder: 0
+servers:
+- url: http://{defaultHost}
+  variables:
+    defaultHost:
+      default: www.example.com

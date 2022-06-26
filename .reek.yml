@@ -1,0 +1,54 @@
+---
+# Reek runs as part of `bundle exec rake linters` and is expected to come back
+# clean. The detectors switched off below flag Rails idioms rather than smells:
+# a controller really does hand state to its view through instance variables, a
+# version namespace really is called V1, and `decrement_stock!` means "returns
+# false when it could not" rather than "there is a safe twin of me".
+detectors:
+  IrresponsibleModule:
+    enabled: false
+  InstanceVariableAssumption:
+    enabled: false
+  MissingSafeMethod:
+    enabled: false
+  NilCheck:
+    enabled: false
+  UncommunicativeModuleName:
+    accept:
+      - V1
+  TooManyStatements:
+    max_statements: 10
+  DuplicateMethodCall:
+    allow_calls:
+      - Rails.env
+  FeatureEnvy:
+    exclude:
+      # Value-object equality is supposed to read the other object.
+      - CoinSet#==
+  UtilityFunction:
+    exclude:
+      # A gem extension has to keep the shape of the method it overrides.
+      - GemExtensions::Devise::TokenGenerator#long_raw_token
+      - GemExtensions::Devise::TokenGenerator#short_token?
+  RepeatedConditional:
+    exclude:
+      # One `return render_service_error(result) if result.failure?` guard per
+      # action is the point of the service layer, not a smell.
+      - Api::V1::VendingMachineController
+
+# Reek has no default ignore list, so everything that is not application code
+# is named here; `rake linters` additionally passes it the paths to scan.
+exclude_paths:
+  - bin
+  - config
+  - coverage
+  - db
+  - log
+  - node_modules
+  - public
+  - rubocop
+  - spec
+  - storage
+  - swagger
+  - tmp
+  - vendor

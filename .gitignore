@@ -1,0 +1,46 @@
+# Bundler
+/.bundle
+/vendor/bundle
+
+# Default SQLite database (unused; the app runs on PostgreSQL)
+/db/*.sqlite3
+/db/*.sqlite3-journal
+
+# Logs, runtime files and uploads
+/log/*
+/tmp/*
+/storage/*
+!/log/.keep
+!/tmp/.keep
+!/storage/.keep
+*.log
+*.rdb
+.byebug_history
+
+# Test coverage
+/coverage/
+
+# Secrets and environment files. The encrypted credentials files are left out
+# too: no key for them exists anywhere, so they cannot be decrypted.
+/config/master.key
+/config/credentials/*.key
+/config/credentials.yml.enc
+/config/credentials/*.yml.enc
+.env
+.env.*
+!.env.example
+!.env.sample
+
+# Local tooling and installed dependencies
+project_venv/
+node_modules/
+.venv/
+
+# Editor / OS noise
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# Not part of this project's history
+.github/

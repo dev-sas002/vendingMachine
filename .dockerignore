@@ -1,0 +1,35 @@
+.git
+.github
+.gitignore
+.dockerignore
+Dockerfile
+docker-compose.yml
+
+# Local secrets and environment
+.env
+.env.*
+!.env.sample
+config/master.key
+config/credentials/*.key
+
+# Generated at runtime, never baked into an image
+log/*
+tmp/*
+storage/*
+coverage
+public/system
+public/uploads
+*.rdb
+
+# Dependencies that are installed inside the image
+vendor/bundle
+node_modules
+project_venv
+.venv
+
+# Editor / OS noise
+.idea
+.vscode
+.DS_Store
+*.swp
+.byebug_history
