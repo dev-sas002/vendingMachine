@@ -25,8 +25,8 @@ RUN apt-get update -qq \
 WORKDIR /app
 
 # Copied on their own so a change to application code does not invalidate the
-# bundle layer.
-COPY Gemfile Gemfile.lock ./
+# bundle layer. The Gemfile reads its Ruby version from .ruby-version.
+COPY Gemfile Gemfile.lock .ruby-version ./
 RUN bundle install \
  && rm -rf "${BUNDLE_PATH}"/ruby/*/cache "${BUNDLE_PATH}"/ruby/*/bundler/gems/*/.git
 
@@ -62,8 +62,9 @@ WORKDIR /app
 COPY --from=build --chown=vending:vending "${BUNDLE_PATH}" "${BUNDLE_PATH}"
 COPY --from=build --chown=vending:vending /app /app
 
-# Writable at runtime; everything else stays owned by root and read-only.
-RUN mkdir -p log tmp/pids storage && chown -R vending:vending log tmp storage
+# Writable at runtime (coverage/ for `compose run web bundle exec rspec`);
+# everything else stays owned by root and read-only.
+RUN mkdir -p log tmp/pids storage coverage && chown -R vending:vending log tmp storage coverage
 
 USER vending
 
