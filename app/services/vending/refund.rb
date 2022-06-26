@@ -17,11 +17,16 @@ module Vending
     end
 
     def call
-      returned_amount = buyer.deposit_amount.to_i
-
-      unless buyer.update(deposit_amount: 0)
-        return ServiceResult.failure(buyer.errors.full_messages.presence || [FAILED])
+      returned_amount = nil
+      # The balance is read and zeroed under a row lock, so two concurrent
+      # resets cannot both hand back the same coins and a deposit landing in
+      # between is never wiped without being returned.
+      emptied = buyer.with_lock do
+        returned_amount = buyer.deposit_amount.to_i
+        buyer.update(deposit_amount: 0)
       end
+
+      return ServiceResult.failure(buyer.errors.full_messages.presence || [FAILED]) unless emptied
 
       ServiceResult.success(buyer: buyer,
                             returned_amount: returned_amount,

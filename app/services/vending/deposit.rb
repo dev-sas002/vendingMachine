@@ -16,11 +16,19 @@ module Vending
     def call
       return ServiceResult.failure(INVALID_AMOUNT) unless coin_set.accepts?(amount)
 
-      if buyer.update_deposit_amount(amount, 'deposit')
+      if credit
         ServiceResult.success(buyer: buyer, deposit_amount: buyer.deposit_amount)
       else
         ServiceResult.failure(buyer.errors.full_messages.presence || [REJECTED])
       end
+    end
+
+    private
+
+    # Without the row lock two coins inserted at once both add to the same
+    # stale balance and one of them disappears.
+    def credit
+      buyer.with_lock { buyer.update_deposit_amount(amount, 'deposit') }
     end
   end
 end
