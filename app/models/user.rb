@@ -52,6 +52,9 @@ class User < ApplicationRecord
 
   enum role: { seller: 0, buyer: 1 }
 
+  # A seller who closes their account takes their stock out of the machine.
+  has_many :products, foreign_key: :seller_id, inverse_of: :seller, dependent: :destroy
+
   validates :deposit_amount,
             numericality: { only_integer: true, greater_than_or_equal_to: 0, allow_nil: true }
 

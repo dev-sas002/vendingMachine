@@ -19,7 +19,7 @@ class Product < ApplicationRecord
   # refer to it as `available_amount`. Alias so both names work.
   alias_attribute :available_amount, :available_count
 
-  belongs_to :seller, class_name: 'User', optional: true
+  belongs_to :seller, class_name: 'User', optional: true, inverse_of: :products
 
   validates :name, presence: true
   validates :price,

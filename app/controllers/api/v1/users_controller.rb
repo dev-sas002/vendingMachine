@@ -1,14 +1,18 @@
 module Api
   module V1
     class UsersController < Api::V1::ApiController
+      include Paginatable
+
       helper_method :user
 
       before_action :require_check_if_changing_password, only: :update
+      # There is no account left to refresh the auth headers of.
+      skip_after_action :update_auth_header, only: :destroy
 
       def all
-        @users = User.all
+        @pagy, @users = paginate(User.order(:id))
 
-        render json: @users
+        render :all
       end
 
       def show; end
@@ -18,7 +22,9 @@ module Api
       end
 
       def destroy
-        user.update!(user_params)
+        user.destroy!
+
+        head :no_content
       end
 
       private
