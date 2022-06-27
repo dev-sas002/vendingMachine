@@ -1,0 +1,93 @@
+inherit_from:
+  - ./rubocop/rubocop_rails.yml
+  - ./rubocop/rubocop_rspec.yml
+
+inherit_mode:
+  merge:
+    - Exclude
+
+require:
+  - rubocop-rails
+  - rubocop-rspec
+  - ./rubocop/rubocop
+
+AllCops:
+  NewCops: enable
+  Exclude:
+    - vendor/**/*
+    - .circleci/*
+    - db/migrate/*
+    - db/schema.rb
+    - bin/bundle
+    - rubocop/**/*.rb
+
+Layout/LineLength:
+  Max: 100
+  Exclude:
+    - config/**/*
+
+Metrics/BlockLength:
+  Exclude:
+    - config/**/*
+    - spec/**/*
+    - lib/tasks/auto_annotate_models.rake
+
+Style/BlockDelimiters:
+  EnforcedStyle: braces_for_chaining
+
+Style/Documentation:
+  Enabled: false
+
+Style/FrozenStringLiteralComment:
+  Enabled: false
+
+Style/NumericLiterals:
+  Exclude:
+    - config/initializers/strong_migrations.rb
+
+# --- Project conventions -----------------------------------------------------
+# Everything below is a deliberate decision, not a suppressed backlog. There is
+# no .rubocop_todo.yml: `bundle exec rake linters` is expected to come back
+# clean.
+
+Metrics/MethodLength:
+  # A 10-line ceiling pushes single-purpose methods apart for no gain; 15 still
+  # catches the methods that genuinely do two things.
+  Max: 15
+
+RSpec/ExampleLength:
+  # Request specs legitimately build a payload, fire a request and assert once.
+  Max: 10
+
+RSpec/NestedGroups:
+  Max: 5
+
+RSpec/MultipleMemoizedHelpers:
+  # An endpoint example group names a buyer, a seller, a product, the headers,
+  # the params and the request itself. Five is not a realistic ceiling here.
+  Max: 12
+
+RSpec/MultipleExpectations:
+  # The house style is one expectation per example. The exceptions are hash
+  # payload assertions and rswag's generated `run_test!` blocks.
+  Max: 4
+
+Rails/SkipsModelValidations:
+  Exclude:
+    # Specs deliberately write rows that the model layer would refuse, to prove
+    # the database constraints hold on their own.
+    - spec/**/*
+
+# rswag's DSL is the reason for the three exclusions below: it requires
+# `let(:'access-token')`, builds example groups whose bodies are generated, and
+# attaches one `after` hook per documented response.
+RSpec/VariableName:
+  Exclude: &rswag_specs
+    - spec/requests/api/v1/products_spec.rb
+    - spec/requests/api/v1/vending_machine_spec.rb
+
+RSpec/EmptyExampleGroup:
+  Exclude: *rswag_specs
+
+RSpec/ScatteredSetup:
+  Exclude: *rswag_specs
