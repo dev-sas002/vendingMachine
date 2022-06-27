@@ -1,0 +1,22 @@
+<%= form_for @product, url: products_path, method: :post do |f| %>
+  <div>
+    <%= f.text_field :name %>
+  </div>
+
+  <div>
+    <%= f.text_field :available_amount %>
+  </div>
+
+  <div>
+    <%= f.text_field :price %>
+  </div>
+
+  <div>
+    <input type="text" name="product[seller_id_id]" id="product_seller_id_id" value="<%= @product.seller_id %>">
+  </div>
+
+  <div>
+    <%= f.submit %>
+  </div>
+<% end %>
+

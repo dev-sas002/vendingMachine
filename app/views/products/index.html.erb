@@ -1,0 +1,11 @@
+<table>
+  <tbody>
+    <% @products.each do |product| %>
+      <tr>
+        <td><%= product.name %></td>
+        <td><%= product.available_amount.to_s %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+
