@@ -1,0 +1,155 @@
+---
+openapi: 3.0.1
+info:
+  title: API V1
+  version: v1
+paths:
+  "/api/v1/products":
+    get:
+      summary: list products
+      responses:
+        '200':
+          description: successful
+          content:
+            application/json:
+              example:
+              - id: 571
+                name: MyProduct
+                available_count: 10
+                price: 100
+                seller_id: 1375
+                created_at: '2022-06-27T14:02:02.187-04:00'
+                updated_at: '2022-06-27T14:02:02.187-04:00'
+              - id: 572
+                name: MyProduct
+                available_count: 10
+                price: 100
+                seller_id: 1376
+                created_at: '2022-06-27T14:02:02.199-04:00'
+                updated_at: '2022-06-27T14:02:02.199-04:00'
+              - id: 573
+                name: MyProduct
+                available_count: 10
+                price: 100
+                seller_id: 1377
+                created_at: '2022-06-27T14:02:02.211-04:00'
+                updated_at: '2022-06-27T14:02:02.211-04:00'
+              - id: 574
+                name: MyProduct
+                available_count: 10
+                price: 100
+                seller_id: 1378
+                created_at: '2022-06-27T14:02:02.228-04:00'
+                updated_at: '2022-06-27T14:02:02.228-04:00'
+              - id: 575
+                name: MyProduct
+                available_count: 10
+                price: 100
+                seller_id: 1379
+                created_at: '2022-06-27T14:02:02.241-04:00'
+                updated_at: '2022-06-27T14:02:02.241-04:00'
+    post:
+      summary: create product
+      parameters:
+      - name: name
+        in: query
+        required: true
+        description: Name of the Product
+        schema:
+          type: string
+      - name: available_count
+        in: query
+        required: true
+        description: Number of quantities
+        schema:
+          type: integer
+      - name: seller_id
+        in: query
+        required: true
+        description: Seller Id
+        schema:
+          type: integer
+      - name: price
+        in: query
+        required: true
+        description: Price of the product
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: successful
+  "/api/v1/products/{id}":
+    parameters:
+    - name: id
+      in: path
+      description: id
+      required: true
+      schema:
+        type: string
+    get:
+      summary: show product
+      responses:
+        '200':
+          description: successful
+          content:
+            application/json:
+              example:
+                errors:
+                - Product not found
+    patch:
+      summary: update product
+      parameters:
+      - name: amount
+        in: path
+        description: Product Price
+        required: true
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: successful
+    delete:
+      summary: delete product
+      responses:
+        '200':
+          description: successful
+  "/api/v1/buy":
+    parameters:
+    - name: product_id
+      in: query
+      description: Product Amount
+      schema:
+        type: integer
+    - name: quantity
+      in: query
+      description: Quantity
+      schema:
+        type: integer
+    post:
+      summary: buy vending_machine
+      responses:
+        '200':
+          description: successful
+  "/api/v1/deposit":
+    parameters:
+    - name: deposit_amount
+      in: query
+      description: Deposit Amount
+      schema:
+        type: integer
+    post:
+      summary: deposit vending_machine
+      responses:
+        '200':
+          description: successful
+  "/api/v1/reset":
+    post:
+      summary: reset vending_machine
+      responses:
+        '200':
+          description: successful
+servers:
+- url: http://{defaultHost}
+  variables:
+    defaultHost:
+      default: www.example.com

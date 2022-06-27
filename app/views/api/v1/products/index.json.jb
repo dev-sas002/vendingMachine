@@ -1,0 +1,10 @@
+@products.map do |product|
+  {
+    id: product.id,
+    name: product.name,
+    available_amount: product.available_amount,
+    price: product.price,
+    seller_id_id: product.seller_id_id,
+    url: product_url(product, format: :json)
+  }
+end
