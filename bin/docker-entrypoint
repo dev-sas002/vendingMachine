@@ -1,0 +1,36 @@
+#!/bin/bash
+# Container entrypoint. `web` prepares the database, seeds it and starts Puma;
+# `worker` starts Sidekiq. Anything else is executed verbatim, so
+# `docker compose run --rm web bundle exec rspec` still works.
+set -euo pipefail
+
+DB_HOST="${DB_HOST:-db}"
+DB_USERNAME="${DB_USERNAME:-postgres}"
+
+wait_for_database() {
+  local attempts=0
+  until pg_isready --host="${DB_HOST}" --username="${DB_USERNAME}" --quiet; do
+    attempts=$((attempts + 1))
+    if [ "${attempts}" -ge 60 ]; then
+      echo "Database at ${DB_HOST} did not become ready in time." >&2
+      exit 1
+    fi
+    sleep 1
+  done
+}
+
+case "${1:-web}" in
+  web)
+    wait_for_database
+    bundle exec rails db:prepare
+    bundle exec rails db:seed
+    exec bundle exec rails server --binding 0.0.0.0 --port "${PORT:-3000}"
+    ;;
+  worker)
+    wait_for_database
+    exec bundle exec sidekiq --config ./config/sidekiq.yml
+    ;;
+  *)
+    exec "$@"
+    ;;
+esac
