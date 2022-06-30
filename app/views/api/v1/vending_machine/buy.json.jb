@@ -1,0 +1,8 @@
+# Renders the purchased product through the same partial the products
+# endpoints use, so one product never has two shapes in the same API.
+{
+  total_bill: @total_bill,
+  product: render('api/v1/products/product', product: @product),
+  remaining_amount: @remaining_amount,
+  change: @change
+}

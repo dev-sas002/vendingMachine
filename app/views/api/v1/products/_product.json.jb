@@ -1,0 +1,16 @@
+# The single definition of a product's JSON representation. Every products
+# endpoint renders through this partial so the shape cannot drift between
+# index, show, create and update.
+{
+  id: product.id,
+  name: product.name,
+  price: product.price,
+  available_count: product.available_count,
+  # `available_amount` is the name the original assessment used; kept as an
+  # alias so existing clients do not break.
+  available_amount: product.available_count,
+  seller_id: product.seller_id,
+  seller: product.seller && { id: product.seller.id, email: product.seller.email },
+  created_at: product.created_at,
+  updated_at: product.updated_at
+}
