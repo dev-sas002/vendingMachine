@@ -1,23 +1,23 @@
 # vendingMachine
 
-A JSON REST API for a coin-operated vending machine, written in Ruby on Rails.
-Users register as a **seller** or a **buyer**: sellers stock the machine, buyers
-deposit coins, buy products and get their change back. Every amount is a whole
-integer number of coin units - there is no floating point anywhere near a
-balance.
+A JSON API for a coin-operated vending machine, in Rails 6.1. Sellers stock the
+machine; buyers deposit coins, buy products and get their change back. Every
+amount is a whole number of coin units, so there is no floating point anywhere
+near a balance.
 
-It was built as a take-home assessment, so it is deliberately a focused API
-rather than a product: no admin UI, no dashboard, no feature bolted on for show.
+Built as a take-home assessment, so it stays a focused API: no admin UI, no
+dashboard, nothing bolted on for show. The part worth reading is not the CRUD; it
+is that a purchase mutates two rows two buyers can race for, and that the race is
+closed and [proved](#closing-the-oversell-race).
 
-## Captured output
+## A recorded session
 
-There is no meaningful user interface to screenshot - this is a JSON API with an
-OpenAPI document and a throwaway read-only HTML page. What follows was recorded
-against a running instance with the demo seeds loaded. The complete session,
-including the test suite and the concurrency proof, is in
-[`docs/api-walkthrough.md`](docs/api-walkthrough.md).
+No screenshots: this is a JSON API, and Swagger UI would not render on the
+machine this was captured on, so the evidence is curl. The full unedited session
+- sign-in, deposit, buy, reset, health, the test run and the concurrency proof -
+is in [`docs/api-walkthrough.md`](docs/api-walkthrough.md). Excerpts:
 
-Authentication is enforced on every `/api/v1` endpoint:
+Authentication is enforced everywhere but sign-in, registration and password reset.
 
 ```console
 $ curl -i http://127.0.0.1:8400/api/v1/products
@@ -29,469 +29,292 @@ HTTP/1.1 401 Unauthorized
 }
 ```
 
-Listing is paginated, and carries the seller without an N+1:
-
-```console
-$ curl -i "http://127.0.0.1:8400/api/v1/products?items=3" -H 'access-token: …' -H 'client: …' -H 'uid: buyer@example.com'
-HTTP/1.1 200 OK
-Link: <http://127.0.0.1:8400/api/v1/products?items=3&page=1>; rel="first", <http://127.0.0.1:8400/api/v1/products?items=3&page=2>; rel="next", <http://127.0.0.1:8400/api/v1/products?items=3&page=2>; rel="last"
-Current-Page: 1
-Page-Items: 3
-Total-Pages: 2
-Total-Count: 6
-[
-    {
-        "id": 1,
-        "name": "Sparkling Water",
-        "price": 55,
-        "available_count": 12,
-        "available_amount": 12,
-        "seller_id": 1,
-        "seller": {
-            "id": 1,
-            "email": "seller@example.com"
-        },
-        "created_at": "2026-09-23T23:31:34.218-04:00",
-        "updated_at": "2026-09-23T23:31:34.218-04:00"
-    },
-    },
-    ... two more products
-]
-```
-
-Buying charges the order, releases the stock and reports the change:
+Deposits go in one coin at a time, and only coins the machine accepts - a deposit
+of 7 against the default 5/10/20/50/100 set is a `422 Invalid Amount`. Buying
+charges the balance, releases the stock, and reports the coins that come back for
+whatever is left (the full product row is in the response too, elided here):
 
 ```console
 $ curl -X POST http://127.0.0.1:8400/api/v1/buy … -d '{"product_id": 2, "quantity": 2}'
 {
     "total_bill": 140,
-    "product": {
-        "id": 2,
-        "name": "Cola",
-        "price": 70,
-        "available_count": 6,
-        "available_amount": 6,
-        "seller_id": 1,
-        "seller": {
-            "id": 1,
-            "email": "seller@example.com"
-        },
-        "created_at": "2026-09-23T23:31:34.223-04:00",
-        "updated_at": "2026-09-23T23:49:14.403-04:00"
-    },
+    "product": { "id": 2, "name": "Cola", "price": 70, "available_count": 6, … },
     "remaining_amount": 60,
-    "change": {
-        "coins": {
-            "50": 1,
-            "10": 1
-        },
-        "remainder": 0
-    }
+    "change": { "coins": { "50": 1, "10": 1 }, "remainder": 0 }
 }
 ```
 
-Resetting hands the balance back as coins:
+Roles are enforced: a buyer calling `POST /api/v1/products` gets a
+`403 Forbidden` with `{"error": "Only sellers can manage products"}`, and a
+seller calling `/deposit` gets `Only buyers can use the vending machine`.
 
-```console
-$ curl -X POST http://127.0.0.1:8400/api/v1/reset -H 'access-token: …' -H 'client: …' -H 'uid: buyer@example.com'
-{
-    "message": "Deposit Amount Reset Successfully",
-    "returned_amount": 60,
-    "change": {
-        "coins": {
-            "50": 1,
-            "10": 1
-        },
-        "remainder": 0
-    }
-}
-```
+## Endpoints
 
-Roles are enforced - a buyer cannot stock the machine:
+Every row below marked *signed in*, *seller* or *buyer* needs the devise_token_auth
+header trio `access-token` / `client` / `uid`.
 
-```console
-$ curl -i -X POST http://127.0.0.1:8400/api/v1/products … -d '{"name": "Contraband", "price": 1, "available_count": 1}'
-HTTP/1.1 403 Forbidden
-{
-    "error": "Only sellers can manage products"
-}
-```
+| Method | Path | Who | What |
+| --- | --- | --- | --- |
+| `POST` | `/api/v1/users` | anyone | Register as `seller` or `buyer` |
+| `POST` `DELETE` | `/api/v1/users/sign_in`, `/sign_out` | anyone / signed in | Issue and revoke the token trio |
+| `POST` `PATCH` | `/api/v1/users/password` | anyone / token | Reset-password mail, then the reset |
+| `GET` `PATCH` `DELETE` | `/api/v1/user` | signed in | The current user; `/user/all` lists every user |
+| `GET` | `/api/v1/products`, `/products/:id` | signed in | Paginated listing with the seller embedded; one product |
+| `POST` `PATCH` `DELETE` | `/api/v1/products` | seller | Stock the machine; changes and deletes only your own rows |
+| `POST` | `/api/v1/deposit` | buyer | One coin onto the balance |
+| `POST` | `/api/v1/buy` | buyer | `{product_id, quantity}` |
+| `POST` | `/api/v1/reset` | buyer | Empty the balance, get coins back |
+| `GET` | `/health`, `/products` | anyone | Liveness with a DB check; read-only HTML listing |
 
-## Architecture
+`GET /api/v1/products` is bounded by the `Paginatable` concern - 25 rows per page,
+`?items=` clamped at 100, pagy's `Link`, `Total-Count`, `Total-Pages`,
+`Current-Page` and `Page-Items` headers - and eager-loads the seller, so a full
+page of 25 costs five queries (two token lookups, a `COUNT`, the page, one
+preload), asserted by a spec that subscribes to `sql.active_record`. Bullet runs with
+`raise = true` in the test environment, so reintroducing the N+1 is a failure.
 
-The application is layered, and the dependencies point inward. Controllers are
-HTTP adapters: they parse parameters, call exactly one service and render the
-result. Services own the business rules and the transaction boundary. The
-domain objects underneath them are pure - no ActiveRecord, no HTTP, no clock -
-and are therefore the cheapest part of the system to test.
+## Running it
 
-```mermaid
-flowchart TD
-    subgraph edge["Rack edge"]
-        RA["rack-attack<br/>throttling"]
-        CORS["rack-cors"]
-    end
-
-    subgraph http["HTTP adapters"]
-        API["Api::V1::ApiController<br/><i>auth &middot; i18n &middot; errors &middot; pagination</i>"]
-        PROD["Api::V1::ProductsController"]
-        VEND["Api::V1::VendingMachineController"]
-        DTA["devise_token_auth controllers<br/><i>sessions &middot; registrations &middot; passwords</i>"]
-        HTML["ProductsController<br/><i>read-only HTML</i>"]
-        HEALTH["HealthController"]
-    end
-
-    subgraph views["Representation"]
-        JB["*.json.jb templates<br/><i>_product.json.jb is the single<br/>definition of a product</i>"]
-    end
-
-    subgraph services["Service layer (use cases)"]
-        DEP["Vending::Deposit"]
-        BUY["Vending::Purchase<br/><i>transaction + row lock</i>"]
-        REF["Vending::Refund"]
-        RES["ServiceResult"]
-    end
-
-    subgraph domain["Domain (pure)"]
-        COIN["CoinSet"]
-        CHANGE["ChangeMaker"]
-        PATTR["ProductAttributes"]
-    end
-
-    subgraph data["Persistence"]
-        USER["User"]
-        PRODUCT["Product<br/><i>conditional stock UPDATE</i>"]
-        PG[("PostgreSQL<br/><i>CHECK constraints</i>")]
-    end
-
-    JOBS["Sidekiq + Redis<br/><i>mailer delivery</i>"]
-    DOCS["rswag &rarr; swagger/v1/swagger.yaml"]
-
-    RA --> CORS --> API
-    CORS --> DTA
-    CORS --> HTML
-    CORS --> HEALTH
-    API --> PROD
-    API --> VEND
-    PROD --> JB
-    VEND --> JB
-    DTA --> JB
-    PROD --> PATTR
-    VEND --> DEP
-    VEND --> BUY
-    VEND --> REF
-    DEP --> RES
-    BUY --> RES
-    REF --> RES
-    DEP --> COIN
-    REF --> CHANGE
-    BUY --> CHANGE
-    CHANGE --> COIN
-    DEP --> USER
-    BUY --> USER
-    BUY --> PRODUCT
-    REF --> USER
-    PROD --> PRODUCT
-    HTML --> PRODUCT
-    HEALTH --> PG
-    USER --> PG
-    PRODUCT --> PG
-    USER -. "reset password mail" .-> JOBS
-    VEND -. "rswag request specs" .-> DOCS
-```
-
-## Buying: the critical path
-
-A purchase is a read-modify-write across two rows - a balance and a stock
-count - so it is the only place in the application where concurrency can cost
-real money. It is one transaction, the buyer row is locked, and the stock is
-removed with a conditional `UPDATE` that the database evaluates rather than the
-application.
-
-```mermaid
-sequenceDiagram
-    autonumber
-    actor Buyer
-    participant C as VendingMachineController
-    participant S as Vending::Purchase
-    participant U as User (row)
-    participant P as Product (row)
-    participant CM as ChangeMaker
-
-    Buyer->>C: POST /api/v1/buy {product_id, quantity}
-    C->>C: authenticate_user! + authorize_buyer
-    C->>C: Product.find(product_id)
-    C->>S: call(buyer:, product:, quantity:)
-
-    alt quantity <= 0
-        S-->>C: failure("Quantity must be greater than zero")
-    else
-        S->>U: BEGIN, then SELECT ... FOR UPDATE
-        S->>S: total = price * quantity
-
-        alt balance < total
-            S-->>C: ROLLBACK, failure("Order Amount exceeded your current Amount")
-        else
-            S->>P: UPDATE products SET available_count = available_count - n<br/>WHERE id = ? AND available_count >= n
-            alt 0 rows updated
-                S-->>C: ROLLBACK, failure("sold out" / "not enough stock")
-            else
-                S->>U: UPDATE users SET deposit_amount = deposit_amount - total
-                S->>CM: change_for(remaining balance)
-                CM-->>S: {coins, remainder}
-                S-->>C: COMMIT, success(total, product, remaining, change)
-            end
-        end
-    end
-
-    C-->>Buyer: 200 with total_bill, product, remaining_amount, change<br/>or 422 with error
-```
-
-## Quickstart
-
-### Docker (one command)
+Ruby 2.7.2 (see `.ruby-version`), PostgreSQL, and Redis if you want Sidekiq.
 
 ```bash
-docker compose up --build
-```
-
-That starts PostgreSQL, Redis, the API and a Sidekiq worker; the web container
-waits for the database, creates and migrates it, loads the demo seeds and then
-serves on **http://localhost:8400**.
-
-| URL | What |
-| --- | --- |
-| `http://localhost:8400/api-docs` | Swagger UI over the generated OpenAPI document |
-| `http://localhost:8400/health` | Liveness probe used by the container healthcheck |
-| `http://localhost:8400/products` | Read-only HTML listing |
-| `http://localhost:8400/jobmonitor` | Sidekiq web UI |
-
-Demo accounts created by `db/seeds.rb`: `seller@example.com` and
-`buyer@example.com`, both with the password `password123`.
-
-Tear the stack down with `docker compose down -v`.
-
-### Without Docker
-
-Requires Ruby 2.7.2 (`.ruby-version`), PostgreSQL and Redis.
-
-```bash
-cp .env.sample .env          # then fill in the values for your machine
+cp .env.sample .env          # fill in values for your machine
 bundle install
 bundle exec rake db:create db:migrate db:seed
 bundle exec rails server -p 8400
 ```
 
-## Configuration
+`db/seeds.rb` is idempotent, refuses to run against production, and creates
+`seller@example.com` and `buyer@example.com` (password `password123`, or
+`SEED_PASSWORD`) plus six products, one deliberately sold out.
 
-Every variable the application reads.
+A `Dockerfile` and a `docker-compose.yml` are here too - PostgreSQL, Redis, the
+API and a Sidekiq worker on port 8400 - but **they have never been run**: Docker
+was unavailable where this was developed, so treat them as unverified. The
+walkthrough and everything above were run natively.
 
-| Variable | Required | Default | What it does |
-| --- | --- | --- | --- |
-| `DB_HOST` | no | `localhost` | PostgreSQL host |
-| `DB_USERNAME` | no | `postgres` | PostgreSQL user |
-| `DB_PASSWORD` | no | `postgres` | PostgreSQL password |
-| `DB_NAME` | no | `vending_machine` | Database name; the test database is `<name>-test` |
-| `DB_POOL` | no | `RAILS_MAX_THREADS`, else `5` | ActiveRecord connection pool size |
-| `RAILS_MAX_THREADS` | no | `5` | Puma thread pool, and the default connection pool |
-| `RAILS_MIN_THREADS` | no | `RAILS_MAX_THREADS` | Puma minimum threads |
-| `PORT` | no | `3000` | Port Puma binds to |
-| `RAILS_ENV` | no | `development` | Rails environment |
-| `REDIS_URL` | in production | none | Sidekiq client and server; Action Cable falls back to `redis://localhost:6379/1` |
-| `COIN_DENOMINATIONS` | no | `5,10,20,50,100` | Comma-separated coins the machine accepts and pays out |
-| `SEED_PASSWORD` | no | `password123` | Password given to the demo accounts by `rails db:seed` |
-| `TZ` | no | `Eastern Time (US & Canada)` | `config.time_zone` |
-| `SITE_TITLE` | for password-reset mail | none | Rendered in the reset-password email; the mailer raises without it |
-| `SERVER_URL` | for mail | none | `default_url_options[:host]` for mailer links |
-| `MAILER_DOMAIN` | for mail | none | SMTP domain |
-| `SENDGRID_API_KEY` | for mail | none | SMTP password (the username is the literal `apikey`) |
-| `DEFAULT_FROM_EMAIL_ADDRESS` | for mail | `no-reply@example.com` for Devise | From/reply-to address |
-| `JOB_MONITOR_USERNAME` | in production | none | HTTP basic auth user for `/jobmonitor` |
-| `JOB_MONITOR_PASSWORD` | in production | none | HTTP basic auth password for `/jobmonitor` |
-| `RAILS_SERVE_STATIC_FILES` | no | unset | Serve `public/` from Rails in production |
-| `RAILS_LOG_TO_STDOUT` | no | unset | Log to stdout in production |
+## A purchase, state by state
 
-`JOB_MONITOR_USERNAME` / `JOB_MONITOR_PASSWORD` have **no default on purpose**.
-In production the Sidekiq UI is wrapped in basic auth that reads them with
-`ENV.fetch` and no fallback, so leaving them unset makes every request to
-`/jobmonitor` fail rather than succeed with a guessable password. The database
-credentials, by contrast, *do* default to `postgres`/`postgres` for local
-convenience - set them explicitly anywhere that matters.
+The buyer's balance is the state machine. `POST /buy` opens a transaction,
+locks the buyer row, and leaves by exactly one of three doors: change returned,
+refused for money, or refused for stock. A non-positive `quantity` is rejected
+before the transaction is opened at all.
 
-## Development
+```mermaid
+stateDiagram-v2
+    [*] --> NoBalance : buyer signs in
+    NoBalance --> HasBalance : POST /deposit, a coin the CoinSet accepts
+    NoBalance --> NoBalance : POST /deposit, any other amount - 422
+    HasBalance --> HasBalance : POST /deposit, another coin
+    NoBalance --> Settling : POST /buy
+    HasBalance --> Settling : POST /buy
+    Settling --> Refused : balance below price times quantity
+    Settling --> Refused : conditional stock UPDATE matched no rows
+    Refused --> NoBalance : ROLLBACK, 422
+    Refused --> HasBalance : ROLLBACK, 422
+    Settling --> Sold : stock decremented, balance debited
+    Sold --> HasBalance : COMMIT, 200 with change for what is left
+    Sold --> NoBalance : COMMIT, 200, balance spent to zero
+    HasBalance --> NoBalance : POST /reset, balance handed back as coins
+```
+
+`Settling` and `Refused` are inside the transaction - nothing a client observes,
+and a rollback leaves balance and stock untouched. The two refusals are
+distinguishable in the body: `Order Amount exceeded your current Amount` versus
+`Product is sold out` / `Not enough stock available`, chosen by re-reading the row.
+
+## Closing the oversell race
+
+A purchase is a read-modify-write across two rows - a balance and a stock count -
+so it is the one place here where concurrency costs real money. Three independent
+guards, in the order they take effect:
+
+1. **One transaction, one lock order.** `Vending::Purchase` wraps the work in
+   `transaction(requires_new: true)` and takes `User.lock.find(buyer.id)`, a
+   `SELECT ... FOR UPDATE`, so one wallet cannot be spent twice concurrently.
+   Locks are always buyer-then-product, so two sessions cannot build a cycle and
+   deadlock. The savepoint is what lets `ActiveRecord::Rollback` unwind the work
+   when an outer transaction is already open - RSpec's transactional fixtures.
+2. **A conditional `UPDATE` the database evaluates.** `Product#decrement_stock!`
+   is deliberately `update_all`, not a model write:
+
+   ```sql
+   UPDATE products SET available_count = available_count - :n
+   WHERE id = :id AND available_count >= :n
+   ```
+
+   Under READ COMMITTED, PostgreSQL re-evaluates that predicate after taking the
+   row lock, so of two buyers racing for the last unit exactly one gets a
+   non-zero row count. Zero rows means the purchase is refused, not clamped.
+3. **`CHECK` constraints underneath both.** `products.available_count >= 0` and
+   `users.deposit_amount >= 0`, added by
+   `db/migrate/20260924090000_add_non_negative_money_constraints.rb`, so a future
+   bug in the application layer cannot persist an impossible number.
+
+`spec/services/vending/purchase_concurrency_spec.rb` proves it rather than
+asserting it: transactional fixtures off, four threads on four real connections
+released simultaneously through a `Queue` gate, rows cleaned up by hand.
+
+- Four buyers race for **two** units: exactly 2 successes, 2 failures, every
+  failure says sold out, `available_count` settles at **0**, and exactly the two
+  served buyers are charged.
+- One buyer with a balance of **30** buys a 10-unit product from four
+  connections: exactly 3 succeed, the balance settles at **0**, stock drops by 3,
+  and the fourth is refused for funds.
+
+Swap `decrement_stock!` for the naive `update(available_count: available_count -
+quantity)` and **7 of those 10 examples fail** - all four buyers get served out
+of two units and `available_count` commits at 1. The proof takes about half a
+second, so it stays in the default suite.
+
+## Two bugs that were actually in here
+
+- **The funds check was inverted.** The guard read the wrong way round, so a
+  purchase was permitted exactly when the buyer could *not* afford it and
+  refused when they could. The balance went negative; nothing complained. It is
+  now `return INSUFFICIENT_FUNDS if deposit_amount < total_amount`, with request
+  and service specs on both sides of the boundary, and a `CHECK` constraint
+  behind it.
+- **Authentication had been switched off.** An earlier automated pass removed the
+  `before_action :authenticate_user!` so placeholder specs would pass. It is back
+  on `Api::V1::ApiController`, which the products, vending-machine and user
+  controllers inherit from, and the 401 (no token) and 403 (wrong role) cases are
+  asserted by `spec/support/shared_examples/authentication.rb` and
+  `spec/requests/api/v1/products/authorization_spec.rb`.
+
+## Layers, and which way they point
+
+Controllers are HTTP adapters: parse params, call exactly one service, render
+its result. Services own the rules and the transaction boundary and return a
+`ServiceResult`. The domain objects underneath are pure - no ActiveRecord, no
+HTTP, no clock - and so are the cheapest part to test. `buy` is a dozen lines of
+parse-delegate-render, which is why the concurrency proof can drive
+`Vending::Purchase` directly.
+
+```mermaid
+flowchart TD
+    RA["rack-attack + rack-cors<br/><i>300 req / 5 min per IP,<br/>5 sign-ins / 20 s per IP and per email</i>"]
+
+    subgraph http["HTTP adapters"]
+        API["Api::V1::ApiController<br/><i>auth · i18n · errors</i>"]
+        PROD["ProductsController<br/><i>+ Paginatable</i>"]
+        VEND["VendingMachineController"]
+        DTA["devise_token_auth<br/><i>sessions · registrations · passwords</i>"]
+    end
+
+    JB["*.json.jb templates<br/><i>_product.json.jb is the only<br/>definition of a product</i>"]
+
+    subgraph services["Services (use cases)"]
+        DEP["Vending::Deposit"]
+        BUY["Vending::Purchase<br/><i>transaction + row lock</i>"]
+        REF["Vending::Refund"]
+    end
+
+    subgraph domain["Domain (pure Ruby)"]
+        CHANGE["ChangeMaker"]
+        COIN["CoinSet<br/><i>accepted denominations</i>"]
+    end
+
+    MODELS["User · Product<br/><i>Product#decrement_stock!<br/>is a conditional UPDATE</i>"]
+    PG[("PostgreSQL<br/><i>two tables,<br/>CHECK constraints</i>")]
+
+    RA --> API & DTA
+    API --> PROD & VEND
+    PROD --> JB & MODELS
+    VEND --> JB
+    VEND --> DEP & BUY & REF
+    DEP --> COIN
+    BUY & REF --> CHANGE --> COIN
+    DEP & BUY & REF --> MODELS --> PG
+```
+
+Two tables and no join model: a purchase is not recorded anywhere. Where things
+live:
+
+```
+app/domain/              coin_set.rb  change_maker.rb  product_attributes.rb
+app/services/vending/    deposit.rb  purchase.rb  refund.rb  (+ ServiceResult above)
+app/controllers/api/v1/  api_controller.rb + products, vending_machine, users, devise
+app/controllers/concerns/  act_as_api_request  exception_handler  localizable  paginatable
+app/views/api/v1/        .json.jb templates; _product.json.jb shared by every endpoint
+rubocop/                 a custom cop - a migration must add an index - and shared config
+swagger/v1/swagger.yaml  generated OpenAPI 3.0, with real examples
+```
+
+## Coins, change, and the currency seam
+
+`CoinSet` is an immutable value object; `CoinSet.default` reads
+`COIN_DENOMINATIONS` and falls back to `5,10,20,50,100`. Every service takes a
+`coin_set:` keyword, so running the machine in another currency is configuration,
+and a test needing odd coins passes its own instance instead of stubbing a
+constant. That is the seam a successor would reach for; a plugin architecture
+here would be invention.
+
+`ChangeMaker` turns a balance into coins, greedy, largest first - provably optimal
+for a canonical set like the default one. A non-canonical set (1, 3, 4) may get
+more coins than the minimum; the caveat is at the top of the class rather than
+hidden, because the alternative is unbounded in memory for an unbounded balance. A
+balance the coins cannot pay exactly comes back as coins *plus* a non-zero
+`remainder` - 103 yields `{"coins": {"100": 1}, "remainder": 3}` - so the machine
+never silently swallows the difference.
+
+## Environment
+
+| Variable | Default | What it does |
+| --- | --- | --- |
+| `DB_HOST` `DB_USERNAME` `DB_PASSWORD` | `localhost` / `postgres` / `postgres` | PostgreSQL connection |
+| `DB_NAME` | `vending_machine` | Database; the test database is `<name>-test` |
+| `DB_POOL` | `RAILS_MAX_THREADS`, else `5` | ActiveRecord pool size |
+| `COIN_DENOMINATIONS` | `5,10,20,50,100` | Coins accepted and paid out |
+| `SEED_PASSWORD` | `password123` | Password for the demo accounts |
+| `REDIS_URL` | none (required in production) | Sidekiq; Action Cable falls back to `redis://localhost:6379/1` |
+| `SITE_TITLE` | none | Rendered in reset-password mail; the mailer raises without it |
+| `SERVER_URL` `MAILER_DOMAIN` `SENDGRID_API_KEY` `DEFAULT_FROM_EMAIL_ADDRESS` | none | Mail delivery (the SMTP username is the literal `apikey`) |
+| `JOB_MONITOR_USERNAME` `JOB_MONITOR_PASSWORD` | none, on purpose | Basic auth for `/jobmonitor` |
+
+The usual Rails knobs also apply: `PORT` (3000), `RAILS_ENV`,
+`RAILS_MAX_THREADS`/`RAILS_MIN_THREADS` (5), `TZ`
+(`Eastern Time (US & Canada)`), `RAILS_SERVE_STATIC_FILES`, `RAILS_LOG_TO_STDOUT`.
+`.env.sample` lists everything. The Sidekiq UI credentials have no default
+deliberately - the initializer reads them with `ENV.fetch` and no fallback, so
+leaving them unset makes every `/jobmonitor` request fail rather than succeed with
+a guessable password. The database credentials *do* default to
+`postgres`/`postgres` for local convenience; set them explicitly anywhere that
+matters.
+
+## Working on the code
 
 ```bash
-bundle exec rspec                    # the whole suite
+bundle exec rspec                    # whole suite
 bundle exec rspec spec/services      # one directory, or one file
 bundle exec rake linters             # rubocop + reek; `-- -a` to autocorrect
 bundle exec rake swagger:generate    # regenerate swagger/v1/swagger.yaml
-bundle exec rake db:seed             # reload the demo data (idempotent)
+bundle exec rake db:seed             # reload the demo data
 ```
 
-Both linters are expected to come back clean - there is no `.rubocop_todo.yml`
-and no suppressed backlog. A SimpleCov report is written to `coverage/` (which
-is gitignored) on every run.
+The suite is **371 examples, 0 failures** in 5.63 s at **98.66%** line coverage
+(1693/1716), SimpleCov reporting into the gitignored `coverage/`. Both linters come
+back clean - no `.rubocop_todo.yml`, no suppressed backlog - and rswag generates
+the OpenAPI document from the request specs, so the docs cannot drift from them.
 
-```console
-$ bundle exec rspec
-...................................................................................................................................................................................................................................................................................................................................................................................
+## What it deliberately does not do
 
-Finished in 5.63 seconds (files took 1.63 seconds to load)
-371 examples, 0 failures
-
-Randomized with seed 2807
-
-Coverage report generated for RSpec to /Users/dev/Documents/Projects/WAMO/githubs/all_projects/vendingMachine/coverage. 1693 / 1716 LOC (98.66%) covered.
-```
-
-## Project structure
-
-```
-app/
-  controllers/
-    api/v1/                     JSON API (ActionController::API)
-      api_controller.rb         base: auth, i18n, error handling, pagination
-      products_controller.rb    product CRUD + seller authorization
-      vending_machine_controller.rb   deposit / buy / reset - HTTP only
-      sessions_ registrations_ passwords_ token_validations_ users_
-    concerns/
-      act_as_api_request.rb     forces JSON, checks content type, skips sessions
-      exception_handler.rb      rescue_from -> JSON error bodies
-      localizable.rb            per-request I18n locale
-      paginatable.rb            bounded index responses + pagination headers
-    application_controller.rb   CSRF policy for the non-API controllers
-    health_controller.rb        liveness probe
-    products_controller.rb      read-only HTML listing
-  domain/                       pure value objects, no Rails dependencies
-    change_maker.rb             balance -> coins + remainder
-    coin_set.rb                 the denominations this machine accepts
-    product_attributes.rb       normalises the accepted parameter shapes
-  services/
-    application_service.rb      .call builds and runs one use case
-    service_result.rb           success/failure + payload, the only return type
-    vending/
-      deposit.rb                accept one coin
-      purchase.rb               charge + release stock, transactionally
-      refund.rb                 empty the balance, dispense coins
-  models/                       User, Product
-  views/
-    api/v1/products/_product.json.jb   the single product representation
-    api/v1/**/*.json.jb                jb JSON templates
-    products/*.html.erb                read-only HTML
-config/
-  routes.rb                     HTML pages, /health, /api/v1, rswag, sidekiq
-  initializers/                 devise, devise_token_auth, rack_attack, sidekiq, rswag, pagy
-db/
-  migrate/ schema.rb seeds.rb   seeds are idempotent and refuse to run in production
-docs/
-  api-walkthrough.md            captured request/response session
-lib/
-  gem_extensions/devise/        token generator override
-  tasks/                        annotate, linters, swagger
-rubocop/                        a custom cop and the shared rubocop config
-spec/                           domain, services, models, requests, routing, views
-swagger/v1/swagger.yaml         generated OpenAPI 3.0 document, with real examples
-```
-
-## Design notes
-
-**Layering.** The purchase rules used to live in the controller. They are now a
-command object, `Vending::Purchase`, that returns a `ServiceResult`; the `buy`
-action is eleven lines that parse, delegate and render. That matters for more than tidiness: the
-concurrency proof below drives the service directly, with no HTTP stack and no
-authentication in the way, which is what makes it fast and deterministic enough
-to keep in the default suite.
-
-**Pure domain objects.** `CoinSet` and `ChangeMaker` have no Rails dependency
-at all. `ChangeMaker` is greedy, which is optimal for a canonical coin system
-like the default 5/10/20/50/100; a custom non-canonical set may get more coins
-than the theoretical minimum, and that is documented at the top of the class
-rather than hidden. A balance the coin set cannot pay exactly - 103, say -
-comes back as `{"coins": {"100": 1}, "remainder": 3}`. The machine never
-silently swallows the difference.
-
-**Overselling.** This is the bug that matters in a vending machine, and there
-are three independent guards:
-
-1. `Vending::Purchase` takes a `SELECT ... FOR UPDATE` on the buyer, so one
-   wallet cannot be spent twice concurrently.
-2. `Product#decrement_stock!` is a single conditional
-   `UPDATE ... WHERE available_count >= n`. Under READ COMMITTED, PostgreSQL
-   re-evaluates that predicate after taking the row lock, so exactly one of two
-   buyers racing for the last item wins.
-3. A `CHECK (available_count >= 0)` constraint on `products` and
-   `CHECK (deposit_amount >= 0)` on `users`. Even a future bug in the
-   application layer cannot persist an impossible number.
-
-Locks are always taken buyer-then-product, so two sessions cannot build a cycle
-and deadlock.
-
-`spec/services/vending/purchase_concurrency_spec.rb` proves it: four threads on
-four real connections race for two units of stock, and separately for one wallet
-holding 30. Exactly two and exactly three purchases succeed. Swapping
-`decrement_stock!` for a naive read-modify-write makes 7 of those 10 examples
-fail - all four buyers get served from two units, and the stock settles at 1.
-
-**Unbounded queries.** `GET /api/v1/products` used to be `Product.all`. It is
-now paginated through the `Paginatable` concern: 25 per page by default, a
-caller-supplied `?items=` clamped at 100, and pagy's standard `Link`,
-`Total-Count`, `Total-Pages`, `Current-Page` and `Page-Items` response headers.
-The HTML listing is paginated the same way.
-
-**N+1.** Putting the seller into the product payload creates a textbook N+1, so
-the index eager-loads it. A full page of 25 products costs five queries - two
-token lookups from devise_token_auth, one `COUNT`, one page of products and one
-preload of their sellers - and that number is asserted by a spec that counts
-`sql.active_record` notifications. Removing the `includes(:seller)` makes Bullet
-raise `UnoptimizedQueryError` and fails 12 of the 14 pagination examples.
-
-**Indexes.** Deliberately none added. Every query the application issues is on a
-primary key or on `products.seller_id`, which is already indexed; adding more
-would be decoration.
-
-**One representation per resource.** The products endpoints used to
-`render json: @product`, which serialises whatever columns happen to exist, and
-the `.json.jb` templates next to them were dead code. Index, show, create,
-update and the product embedded in a `buy` response now all render
-`_product.json.jb`, so the shape cannot drift between endpoints.
-
-**The extensibility seam: `CoinSet`.** The accepted denominations were a frozen
-array inside the controller. They are now a value object that `CoinSet.default`
-builds from `COIN_DENOMINATIONS`, and every service takes a `coin_set:` keyword
-argument. Running the same machine in another currency is a configuration
-change, and a test that needs different coins passes its own instance instead of
-stubbing a constant. That is the seam a future developer would actually reach
-for; a plugin architecture here would be invention.
-
-**CSRF and content negotiation.** A client that posted a JSON body without an
-`Accept` header used to get a `500 InvalidAuthenticityToken` from
-`POST /api/v1/users/sign_in`, because the request negotiated `text/html`.
-`ApplicationController` now treats an `application/json` content type as proof of
-an API client (a browser cannot send one cross-origin without a preflight), and
-`ActAsApiRequest` pins the response format to JSON. Covered by
-`spec/requests/api/v1/sessions/json_content_type_spec.rb`.
-
-## Limitations
-
-- **There is no coin inventory.** The machine tracks one integer balance per
-  buyer. `ChangeMaker` computes which coins *would* be dispensed, but nothing
-  tracks how many 50s the machine physically holds, so it will happily "pay out"
-  coins it does not have. Modelling a float would mean a new table and a second
-  concurrency story; it is out of scope for the assessment.
-- **No refunds, order history or receipts.** A purchase mutates a balance and a
-  stock count and returns a body. Nothing is recorded, so there is no ledger to
-  reconcile against and no way to answer "what did this buyer buy last week".
-- **Sidekiq is configured but nearly idle.** The only background work is
-  delivering the Devise reset-password email. The worker exists so the wiring is
-  demonstrably correct, not because there is a queue to drain.
-- **The HTML pages are a debugging convenience.** `/products` is unauthenticated
-  and read-only, has no styling, and exposes no write actions. It is not a user
-  interface and is not trying to be one.
-- **Authorization is role checks in controllers.** With two roles and five
-  endpoints that is the right size; a policy object layer (Pundit and friends)
-  would be more machinery than the rules justify.
-- **No rate limiting on the money endpoints.** rack-attack throttles requests
-  per IP and sign-ins per IP and per email, but `deposit` and `buy` are not
-  separately throttled.
-- **The API is versioned by path only.** There is no deprecation mechanism and
-  no content negotiation between versions; `/api/v2` would be a new namespace.
+- **No coin inventory.** `ChangeMaker` computes which coins *would* be
+  dispensed, and that is all: no coin table, no float, no endpoint, nothing
+  tracking how many 50s the machine physically holds. Modelling one means a new
+  table and a second concurrency story.
+- **No order history.** A purchase mutates a balance and a stock count and
+  returns a body; nothing is written down, so there is no ledger to reconcile.
+- **`GET /api/v1/user/all` is unbounded.** Pagination was added where a caller
+  can grow the data - products. That endpoint still returns every user.
+- **Sidekiq is configured but nearly idle.** Its only job is delivering the
+  Devise reset-password mail; the worker exists to prove the wiring.
+- **The HTML pages are a debugging convenience.** `/products` is
+  unauthenticated, read-only, unstyled and write-free. It is not a UI.
+- **Authorization is role checks in controllers.** Two roles and five endpoints;
+  a policy-object layer would be more machinery than the rules justify.
+- **The money endpoints are not separately throttled.** rack-attack limits
+  requests per IP and sign-ins per IP and per email; `deposit` and `buy` share the
+  general limit.
+- **Versioned by path only.** No deprecation mechanism, no content negotiation
+  between versions; `/api/v2` would be a new namespace.
